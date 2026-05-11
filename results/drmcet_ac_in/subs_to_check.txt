@@ -1,0 +1,13 @@
+src.drmcet.ac.in
+www.drmcet.ac.in
+alumni.drmcet.ac.in
+career.drmcet.ac.in
+grievances.drmcet.ac.in
+myfiles.drmcet.ac.in
+student.drmcet.ac.in
+admission.drmcet.ac.in
+cibie.drmcet.ac.in
+mail.drmcet.ac.in
+sgs.drmcet.ac.in
+sproutlms.drmcet.ac.in
+www.sproutlms.drmcet.ac.in

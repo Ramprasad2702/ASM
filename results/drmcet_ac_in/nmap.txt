@@ -1,0 +1,118 @@
+# Nmap 7.99 scan initiated Mon May 11 01:04:31 2026 as: /usr/lib/nmap/nmap --privileged -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21,22,25,53,80,110,143,443,445,3306,3389,8080,8443 -oN results/drmcet_ac_in/nmap.txt drmcet.ac.in
+Nmap scan report for drmcet.ac.in (35.154.13.35)
+Host is up (0.0082s latency).
+rDNS record for 35.154.13.35: ec2-35-154-13-35.ap-south-1.compute.amazonaws.com
+
+PORT     STATE    SERVICE       VERSION
+21/tcp   filtered ftp
+22/tcp   filtered ssh
+25/tcp   filtered smtp
+53/tcp   filtered domain
+80/tcp   filtered http
+110/tcp  filtered pop3
+143/tcp  filtered imap
+443/tcp  open     ssl/http      Apache httpd
+| http-fileupload-exploiter: 
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|     Couldn't find a file-type field.
+|   
+|_    Couldn't find a file-type field.
+|_http-trane-info: Problem with XML parsing of /evox/about
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+| http-enum: 
+|   /blog/: Blog
+|   /wp-login.php: Possible admin folder
+|   /wp-json: Possible admin folder
+|   /test/: Test page
+|   /robots.txt: Robots file
+|   /readme.html: Wordpress version: 2 
+|   /: WordPress version: 6.9.4
+|   /feed/: Wordpress version: 6.9.4
+|   /wp-includes/images/rss.png: Wordpress version 2.2 found.
+|   /wp-includes/js/jquery/suggest.js: Wordpress version 2.5 found.
+|   /wp-includes/images/blank.gif: Wordpress version 2.6 found.
+|   /wp-includes/js/comment-reply.js: Wordpress version 2.7 found.
+|   /wp-login.php: Wordpress login page.
+|   /wp-admin/upgrade.php: Wordpress login page.
+|   /readme.html: Interesting, a readme.
+|   /contact/: Potentially interesting folder
+|   /helpdesk/: Potentially interesting folder
+|   /library/: Potentially interesting folder
+|   /news/: Potentially interesting folder
+|   /News/: Potentially interesting folder
+|   /staff/: Potentially interesting folder
+|_  /statistics/: Potentially interesting folder
+| http-aspnet-debug: 
+|_  status: DEBUG is enabled
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+|_http-sql-injection: ERROR: Script execution failed (use -d to debug)
+| http-csrf: 
+| Spidering limited to: maxdepth=3; maxpagecount=20; withinhost=drmcet.ac.in
+|   Found the following possible CSRF vulnerabilities: 
+|     
+|     Path: https://drmcet.ac.in:443/teaching-and-learning-centre/gallery-2/
+|     Form id: gal_front_form_0
+|     Form action: #
+|     
+|     Path: https://drmcet.ac.in:443/teaching-and-learning-centre/gallery-2/
+|     Form id: gal_front_form_1
+|     Form action: #
+|     
+|     Path: https://drmcet.ac.in:443/teaching-and-learning-centre/gallery-2/
+|     Form id: gal_front_form_2
+|     Form action: #
+|     
+|     Path: https://drmcet.ac.in:443/8796-2/training-placement/
+|     Form id: gal_front_form_0
+|_    Form action: #
+| http-wordpress-users: 
+| Username found: mcet-admin22
+| Username found: mcet-admin
+| Username found: admin2
+| Username found: websupport
+| Username found: navinkumar-snwebboombaa-org
+|_Search stopped at ID #25. Increase the upper limit if necessary with 'http-wordpress-users.limit'
+445/tcp  filtered microsoft-ds
+3306/tcp filtered mysql
+3389/tcp filtered ms-wbt-server
+8080/tcp filtered http-proxy
+8443/tcp filtered https-alt
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon May 11 01:15:18 2026 -- 1 IP address (1 host up) scanned in 647.45 seconds

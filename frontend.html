@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASM Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-dark: #070B14;
+    --bg-sidebar: #0B1221;
+    --border-color: #1E293B;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --accent-blue: #38BDF8;
+    --active-item: #172542;
+  }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* HOME PAGE */
+  #home-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: radial-gradient(circle at center, #101c36 0%, var(--bg-dark) 70%);
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    margin-bottom: 2rem;
+  }
+
+  .scan-form {
+    display: flex;
+    gap: 15px;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+  }
+
+  .scan-input {
+    padding: 12px 20px;
+    width: 350px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #0f172a;
+    color: white;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .scan-input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+
+  .scan-button {
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent-blue);
+    color: #032b43;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.1s ease;
+  }
+
+  .scan-button:hover { background: #7dd3fc; }
+  .scan-button:active { transform: scale(0.98); }
+
+  /* LOADING STATE */
+  #loading-view {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--bg-dark);
+  }
+
+  .loader {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+  }
+
+  .progress-container {
+    width: 400px;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 10px;
+    margin-top: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), #60A5FA);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+  }
+
+  .loading-status {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+    opacity: 0.8;
+  }
+
+  /* DASHBOARD */
+  #dashboard-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+  }
+
+  .sidebar {
+    width: 260px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+  }
+
+  .sidebar-header {
+    padding: 0 24px 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar-title {
+    color: var(--accent-blue);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5px;
+  }
+
+  .nav-menu { list-style: none; padding: 0; margin: 0; }
+  .nav-item { padding: 12px 24px; cursor: pointer; color: var(--text-secondary); font-size: 0.95rem; display: flex; align-items: center; gap: 12px; transition: all 0.2s ease; margin: 4px 12px; border-radius: 8px; }
+  .nav-item:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+  .nav-item.active { background-color: var(--active-item); color: var(--accent-blue); font-weight: 500; }
+
+  .nav-icon {
+    width: 18px; height: 18px; opacity: 0.7;
+  }
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  /* MAIN CONTENT */
+  .main-content {
+    margin-left: 260px;
+    padding: 40px 60px;
+    height: 100vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+
+  .content-header { margin-bottom: 40px; }
+  .content-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  /* THREAT INTEL LIST */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 35px;
+  }
+  .stat-card {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+  }
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    border-color: var(--accent-blue);
+  }
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stat-icon svg { width: 24px; height: 24px; }
+  
+  .url-icon { background: rgba(56, 189, 248, 0.1); color: #38BDF8; }
+  .ip-icon { background: rgba(167, 139, 250, 0.1); color: #A78BFA; }
+  .pulse-icon { background: rgba(251, 146, 60, 0.1); color: #FB923C; }
+  .risk-icon { background: rgba(244, 63, 94, 0.1); color: #F43F5E; }
+
+  .stat-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .badge {
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .risk-low { background: rgba(34, 197, 94, 0.15); color: #4ADE80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .risk-medium { background: rgba(251, 146, 60, 0.15); color: #FB923C; border: 1px solid rgba(251, 146, 60, 0.3); }
+  .risk-high { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+  .risk-critical { background: rgba(153, 27, 27, 0.15); color: #FCA5A5; border: 1px solid rgba(153, 27, 27, 0.3); }
+
+  .mitre-card {
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-blue);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+  }
+  .mitre-card:hover { background: rgba(15, 23, 42, 0.6); border-color: rgba(56, 189, 248, 0.4); }
+  .mitre-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .mitre-id { color: #F8FAFC; font-size: 1.1rem; }
+  .mitre-tactic { background: rgba(56, 189, 248, 0.1); color: #38BDF8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
+  .mitre-keyword { color: var(--text-secondary); font-size: 0.9rem; }
+  .mitre-keyword span { color: #CBD5E1; font-weight: 500; }
+
+  .supply-card {
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid var(--border-color);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+  .supply-card:hover { background: rgba(15, 23, 42, 0.6); border-color: rgba(148, 163, 184, 0.4); }
+  .supply-domain { display: flex; align-items: center; gap: 10px; color: var(--text-primary); font-weight: 500; font-size: 1.05rem; }
+  .supply-domain svg { color: var(--text-secondary); width: 18px; height: 18px; }
+  .supply-asn { display: flex; gap: 8px; }
+  .asn-tag, .country-tag { background: rgba(148, 163, 184, 0.1); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; border: 1px solid rgba(148, 163, 184, 0.2); }
+
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 30px 0 15px;
+    padding-bottom: 8px;
+  }
+
+  /* TABLES */
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 20px;
+  }
+  
+  .data-table th {
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 14px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .data-table th:first-child { border-top-left-radius: 8px; }
+  .data-table th:last-child { border-top-right-radius: 8px; }
+
+  .data-table td {
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+    background: rgba(15, 23, 42, 0.2);
+    transition: background 0.2s ease;
+  }
+
+  .data-table tbody tr:hover td {
+    background: rgba(15, 23, 42, 0.6);
+  }
+  
+  .data-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .data-table tbody tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+  .data-table tbody tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+
+  .empty-state {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    padding: 10px 0;
+  }
+
+  /* ENDPOINT GROUPING */
+  .endpoint-group {
+    margin-bottom: 25px;
+    background: rgba(15, 23, 42, 0.2);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+  .endpoint-header {
+    padding: 15px 20px;
+    background: rgba(30, 41, 59, 0.3);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .endpoint-header:hover { background: rgba(30, 41, 59, 0.5); }
+  .endpoint-title {
+    font-weight: 700;
+    color: var(--accent-blue);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .endpoint-badge {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent-blue);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+  .endpoint-content {
+    padding: 15px;
+    display: none;
+  }
+  .endpoint-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .finding-detail {
+    margin-top: 10px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #CBD5E1;
+    white-space: pre-wrap;
+    border-left: 2px solid var(--accent-blue);
+  }
+
+  /* CRITICAL FINDINGS */
+  .critical-finding-card {
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+  .critical-finding-card:hover {
+    border-color: rgba(244, 63, 94, 0.6);
+    transform: translateX(5px);
+  }
+  .critical-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .critical-name { font-weight: 600; color: #F8FAFC; }
+  .critical-endpoint { font-size: 0.85rem; color: var(--text-secondary); }
+
+</style>
+</head>
+<body>
+
+  <!-- 1. HOME VIEW -->
+  <div id="home-view">
+    <div class="hero-title">ASM Dashboard</div>
+    <div class="scan-form">
+      <input type="text" id="target-input" class="scan-input" placeholder="Enter domain, IP, or URL to scan..." autocomplete="off">
+      <button class="scan-button" onclick="startScan()">Scan Target</button>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div id="loading-view">
+    <div class="loader"></div>
+    <div class="loading-text" id="loading-msg">Initializing Automated Pipeline...</div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="loading-status" id="loading-status">Connecting to scanner nodes...</div>
+  </div>
+
+  <!-- 3. DASHBOARD VIEW -->
+  <div id="dashboard-view">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="sidebar-title">ASM Dashboard</h1>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item" onclick="switchTab('tab-dashboard')">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+          Dashboard
+        </li>
+        <li class="nav-item" onclick="switchTab('tab-assets')">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          Asset Discovery
+        </li>
+        <li class="nav-item" onclick="switchTab('tab-vuln')">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          Vulnerabilities
+        </li>
+        <li class="nav-item active" onclick="switchTab('tab-threat')">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+          Threat Intelligence
+        </li>
+        <li class="nav-item" onclick="switchTab('tab-brand')">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          Brand Monitoring
+        </li>
+      </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      
+      <!-- Threat Intel Tab -->
+      <div id="tab-threat" class="tab-content" style="display: block;">
+        <div class="content-header">
+          <h2 class="content-title">Threat Intelligence</h2>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon url-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Affected URLs</span>
+              <span class="stat-value" id="val-urls">0</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon ip-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Affected IPs</span>
+              <span class="stat-value" id="val-ips">0</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon pulse-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">OTX Pulses</span>
+              <span class="stat-value" id="val-pulses">0</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon risk-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Risk Level</span>
+              <span class="stat-value badge risk-low" id="val-risk">LOW</span>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="section-title">MITRE ATT&CK Techniques</h3>
+        <div id="mitre-container">
+          <div class="empty-state">No MITRE techniques detected</div>
+        </div>
+
+        <h3 class="section-title">OTX Threat Pulses</h3>
+        <div id="otx-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pulse</th>
+                <th>Type</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody id="otx-tbody">
+              <tr><td colspan="3" class="empty-state">No threat pulses detected</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="section-title">Supply Chain / Third Party Domains</h3>
+        <div id="supply-container">
+          <div class="empty-state">No supply chain data</div>
+        </div>
+
+      </div>
+
+      <!-- Dashboard Tab -->
+      <div id="tab-dashboard" class="tab-content" style="display: none;">
+        <div class="content-header">
+          <h2 class="content-title">Dashboard Overview</h2>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card" onclick="switchTab('tab-assets')">
+            <div class="stat-icon url-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div>
+            <div class="stat-details">
+              <span class="stat-label">Total Assets</span>
+              <span class="stat-value" id="dash-assets">0</span>
+            </div>
+          </div>
+          <div class="stat-card" onclick="switchTab('tab-assets')">
+            <div class="stat-icon ip-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+            <div class="stat-details">
+              <span class="stat-label">Open Ports</span>
+              <span class="stat-value" id="dash-ports">0</span>
+            </div>
+          </div>
+          <div class="stat-card" onclick="switchTab('tab-vuln')">
+            <div class="stat-icon pulse-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+            <div class="stat-details">
+              <span class="stat-label">Vulnerabilities</span>
+              <span class="stat-value" id="dash-vulns">0</span>
+            </div>
+          </div>
+          <div class="stat-card" onclick="switchTab('tab-threat')">
+            <div class="stat-icon risk-icon" id="dash-risk-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+            <div class="stat-details">
+              <span class="stat-label">Final Risk</span>
+              <span class="stat-value badge risk-low" id="dash-risk">LOW</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="critical-findings-section" style="display: none;">
+          <h3 class="section-title">Critical & High Findings</h3>
+          <div id="critical-findings-container"></div>
+        </div>
+      </div>
+
+      <!-- Asset Discovery Tab -->
+      <div id="tab-assets" class="tab-content" style="display: none;">
+        <div class="content-header">
+          <h2 class="content-title">Asset Discovery</h2>
+        </div>
+        <h3 class="section-title">Discovered IP Geolocations</h3>
+        <div class="stats-grid" id="geo-grid">
+          <div class="empty-state">No geolocation data found.</div>
+        </div>
+        <h3 class="section-title">Open Services</h3>
+        <div id="services-container">
+          <div class="empty-state">No services identified.</div>
+        </div>
+      </div>
+
+      <!-- Vulnerabilities Tab -->
+      <div id="tab-vuln" class="tab-content" style="display: none;">
+        <div class="content-header">
+          <h2 class="content-title">Vulnerabilities</h2>
+        </div>
+        <div id="owasp-summary-container"></div>
+        <div id="vuln-container">
+          <div class="empty-state">No vulnerabilities detected.</div>
+        </div>
+      </div>
+
+      <!-- Brand Monitoring Tab -->
+      <div id="tab-brand" class="tab-content" style="display: none;">
+        <div class="content-header">
+          <h2 class="content-title">Brand Monitoring</h2>
+        </div>
+        <p class="empty-state">Monitoring target brand presence across malicious domains, phishing kits, and deep/dark web sources.</p>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  function switchTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    
+    // Show target tab
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+      targetTab.style.display = 'block';
+    }
+    
+    // Find and highlight correct nav item
+    // Map tab IDs to their corresponding nav item text or search for the onclick attribute
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+      if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(tabId)) {
+        item.classList.add('active');
+      }
+    });
+  }
+
+  async function startScan() {
+    const target = document.getElementById('target-input').value.trim();
+    if (!target) return alert('Please enter a target');
+
+    // UI Transition
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('loading-view').style.display = 'flex';
+    document.getElementById('loading-msg').innerText = `Scanning ${target}...`;
+
+    // Trigger Scan API
+    try {
+      const res = await fetch(`/scan?target=${encodeURIComponent(target)}`);
+      if (!res.ok) throw new Error('Scan failed to start');
+      
+      // Poll for completion
+      pollResults(target);
+    } catch (err) {
+      alert(err.message);
+      location.reload();
+    }
+  }
+
+  async function pollResults(target) {
+    const safeTarget = target.replace(/[^a-z0-9]/gi, "_");
+    
+    const interval = setInterval(async () => {
+      try {
+        // Poll for progress state
+        const statusRes = await fetch(`/results/${safeTarget}/scan_state.json`);
+        if (statusRes.ok) {
+          const state = await statusRes.json();
+          document.getElementById('progress-bar').style.width = `${state.progress}%`;
+          document.getElementById('loading-status').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
+        }
+
+        // Looking for unified_report.json which signifies the entire pipeline finished
+        const res = await fetch(`/results/${safeTarget}/unified_report.json`);
+        
+        if (res.ok) {
+          clearInterval(interval);
+          const data = await res.json();
+          renderDashboard(data);
+        }
+      } catch (e) {
+        // Still processing
+      }
+    }, 3000);
+  }
+
+  function toggleEndpoint(id) {
+    const content = document.getElementById(`endpoint-content-${id}`);
+    const isVisible = content.classList.contains('active');
+    
+    // Optional: close other endpoints
+    // document.querySelectorAll('.endpoint-content').forEach(el => el.classList.remove('active'));
+    
+    if (!isVisible) {
+      content.classList.add('active');
+    } else {
+      content.classList.remove('active');
+    }
+  }
+
+  function renderDashboard(data) {
+    // Hide loading, show dashboard
+    document.getElementById('loading-view').style.display = 'none';
+    document.getElementById('dashboard-view').style.display = 'block';
+
+    const threat = data.threat_intel || {};
+    const basic = threat.basic_intel || {};
+    const corr = threat.correlation || {};
+    
+    // Set basic stats
+    document.getElementById('val-urls').innerText = basic.urls_checked || 0;
+    document.getElementById('val-ips').innerText = basic.ips_checked || 0;
+    document.getElementById('val-pulses').innerText = corr.otx_pulses || 0;
+    const riskLevel = (threat.risk && threat.risk.level) ? threat.risk.level.toUpperCase() : 'LOW';
+    const riskEl = document.getElementById('val-risk');
+    riskEl.innerText = riskLevel;
+    riskEl.className = 'stat-value badge';
+    if (riskLevel === 'LOW') riskEl.classList.add('risk-low');
+    else if (riskLevel === 'MEDIUM') riskEl.classList.add('risk-medium');
+    else if (riskLevel === 'HIGH') riskEl.classList.add('risk-high');
+    else riskEl.classList.add('risk-critical');
+
+    // Render MITRE
+    const mitreHits = (basic.virustotal_domain && basic.virustotal_domain.mitre_mapping) ? basic.virustotal_domain.mitre_mapping : [];
+    if (mitreHits.length > 0) {
+      const mitreHtml = mitreHits.map(m => `
+        <div class="mitre-card">
+          <div class="mitre-header">
+            <strong class="mitre-id">${m.technique_id}</strong>
+            <span class="mitre-tactic">${m.tactic}</span>
+          </div>
+          <div class="mitre-keyword">Matched: <span>${m.matched_keyword}</span></div>
+        </div>
+      `).join('');
+      document.getElementById('mitre-container').innerHTML = mitreHtml;
+    }
+
+    // Render OTX Pulses
+    const pulses = (basic.otx_domain && basic.otx_domain.pulses) ? basic.otx_domain.pulses : [];
+    if (pulses.length > 0) {
+      document.getElementById('otx-tbody').innerHTML = pulses.map(p => `
+        <tr>
+          <td style="color:var(--text-primary); font-weight: 500;">${p.name || 'Unknown Pulse'}</td>
+          <td><span style="background: rgba(167, 139, 250, 0.1); color: #A78BFA; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">${p.type || 'N/A'}</span></td>
+          <td>${p.confidence || 0}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Supply Chain
+    const supply = (threat.advanced_intel && threat.advanced_intel.supply_chain_risks) ? threat.advanced_intel.supply_chain_risks : [];
+    if (supply.length > 0) {
+      const supplyHtml = supply.map(s => `
+        <div class="supply-card">
+          <div class="supply-domain">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            ${s.domain}
+          </div>
+          <div class="supply-asn">
+            <span class="asn-tag">${s.asn_provider || 'Unknown ASN'}</span>
+            <span class="country-tag">${s.country || 'Unknown'}</span>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('supply-container').innerHTML = supplyHtml;
+    }
+
+    // --- NEW: Dashboard Overview ---
+    const recon = data.recon_summary || {};
+    const vuln = data.vulnerability || {};
+    const finalRisk = (data.final_risk && data.final_risk.level) ? data.final_risk.level.toUpperCase() : 'LOW';
+    
+    const totalAssets = (recon.urls || 0) + (recon.ips || 0);
+    document.getElementById('dash-assets').innerText = totalAssets;
+    
+    const portsCount = (vuln.attack_surface && vuln.attack_surface.services) ? vuln.attack_surface.services.length : 0;
+    document.getElementById('dash-ports').innerText = portsCount;
+    
+    const vulnFindings = vuln.findings || [];
+    document.getElementById('dash-vulns').innerText = vulnFindings.length;
+    
+    const dashRiskEl = document.getElementById('dash-risk');
+    dashRiskEl.innerText = finalRisk;
+    dashRiskEl.className = 'stat-value badge';
+    const dashRiskIcon = document.getElementById('dash-risk-icon');
+    dashRiskIcon.className = 'stat-icon';
+    if (finalRisk === 'LOW') { dashRiskEl.classList.add('risk-low'); dashRiskIcon.classList.add('url-icon'); }
+    else if (finalRisk === 'MEDIUM') { dashRiskEl.classList.add('risk-medium'); dashRiskIcon.classList.add('pulse-icon'); }
+    else if (finalRisk === 'HIGH') { dashRiskEl.classList.add('risk-high'); dashRiskIcon.classList.add('risk-icon'); }
+    else { dashRiskEl.classList.add('risk-critical'); dashRiskIcon.classList.add('risk-icon'); }
+
+    // CRITICAL FINDINGS SUMMARY
+    const criticalFindings = vulnFindings.filter(f => ['critical', 'high'].includes((f.severity || '').toLowerCase()));
+    const critSection = document.getElementById('critical-findings-section');
+    const critContainer = document.getElementById('critical-findings-container');
+    
+    if (criticalFindings.length > 0) {
+      critSection.style.display = 'block';
+      critContainer.innerHTML = criticalFindings.map(f => `
+        <div class="critical-finding-card" onclick="switchTab('tab-vuln')">
+          <div class="critical-info">
+            <span class="critical-name">${f.name}</span>
+            <span class="critical-endpoint" style="color: var(--accent-blue);">${f.url || (f.port ? `Port ${f.port}` : 'General')}</span>
+          </div>
+          <span class="badge risk-high">${(f.severity || 'high').toUpperCase()}</span>
+        </div>
+      `).join('');
+    } else {
+      critSection.style.display = 'none';
+    }
+
+    // --- Asset Discovery Tab Updates ---
+    const allUrls = data.recon_summary?.urls_list || [];
+    if (allUrls.length > 0) {
+      const urlsHtml = `
+        <h3 class="section-title">Discovered Assets & URLs</h3>
+        <div class="stats-grid">
+          ${allUrls.map(u => `
+            <div class="stat-card" style="padding: 12px 15px; border-radius: 8px;">
+              <div class="stat-icon url-icon" style="width: 32px; height: 32px;"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
+              <div style="font-size: 0.9rem; color: var(--text-primary); word-break: break-all;">${u}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      const assetTab = document.getElementById('tab-assets');
+      if (!document.getElementById('urls-section')) {
+         const div = document.createElement('div');
+         div.id = 'urls-section';
+         div.innerHTML = urlsHtml;
+         assetTab.insertBefore(div, assetTab.querySelector('.section-title'));
+      } else {
+         document.getElementById('urls-section').innerHTML = urlsHtml;
+      }
+    }
+
+    // --- NEW: Asset Discovery ---
+    if (vuln.geo && Object.keys(vuln.geo).length > 0) {
+      const geoHtml = Object.keys(vuln.geo).map(ip => {
+        const info = vuln.geo[ip];
+        return `
+          <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+            <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 5px;">${ip}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">${info.city || ''}, ${info.country || ''}</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">ISP: ${info.isp || 'N/A'}</div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('geo-grid').innerHTML = geoHtml;
+    }
+
+    if (vuln.attack_surface && vuln.attack_surface.services) {
+      const servicesHtml = vuln.attack_surface.services.map(s => `
+        <div class="supply-card" style="align-items: flex-start; padding: 18px;">
+          <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
+            <div style="color: var(--accent-blue); font-weight: 800; font-size: 1.1rem; width: 80px; border-right: 1px solid var(--border-color);">${s.port}</div>
+            <div style="flex: 1;">
+              <div style="color: var(--text-primary); font-weight: 600; font-size: 1.05rem;">${s.service.toUpperCase()}</div>
+              <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Version: <span style="color: var(--accent-blue);">${s.version || 'Unknown'}</span></div>
+            </div>
+            <div class="badge risk-low" style="font-size: 0.7rem;">OPEN</div>
+          </div>
+        </div>
+      `).join('');
+      if (servicesHtml) document.getElementById('services-container').innerHTML = servicesHtml;
+    }
+
+    // --- GROUPED VULNERABILITIES ---
+    if (vulnFindings.length > 0) {
+      // Group by endpoint
+      const groups = {};
+      vulnFindings.forEach(v => {
+        const key = v.url || `Port ${v.port}` || 'General';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(v);
+      });
+
+      const vulnsHtml = Object.keys(groups).map((endpoint, idx) => {
+        const findings = groups[endpoint];
+        const highCount = findings.filter(f => ['high', 'critical'].includes((f.severity || '').toLowerCase())).length;
+        
+        return `
+          <div class="endpoint-group">
+            <div class="endpoint-header" onclick="toggleEndpoint(${idx})">
+              <div class="endpoint-title">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                ${endpoint}
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <span class="endpoint-badge">${findings.length} Findings</span>
+                ${highCount > 0 ? `<span class="badge risk-high">${highCount} High/Crit</span>` : ''}
+              </div>
+            </div>
+            <div class="endpoint-content" id="endpoint-content-${idx}">
+              ${findings.map(v => {
+                const sev = (v.severity || 'info').toUpperCase();
+                let sevClass = 'risk-low';
+                let borderCol = '#4ADE80';
+                if (sev === 'MEDIUM') { sevClass = 'risk-medium'; borderCol = '#FB923C'; }
+                if (sev === 'HIGH' || sev === 'CRITICAL') { sevClass = 'risk-high'; borderCol = '#F43F5E'; }
+                return `
+                  <div class="mitre-card" style="border-left-color: ${borderCol}; margin-bottom: 10px;">
+                    <div class="mitre-header" style="justify-content: space-between;">
+                      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <strong class="mitre-id">${v.name}</strong>
+                        ${v.owasp ? `<span class="badge" style="background: rgba(167, 139, 250, 0.15); color: #A78BFA; border: 1px solid rgba(167, 139, 250, 0.3); font-size: 0.75rem;">${v.owasp}</span>` : ''}
+                        ${v.link ? `<a href="${v.link}" target="_blank" style="color: var(--accent-blue); text-decoration: none;"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>` : ''}
+                      </div>
+                      <span class="badge ${sevClass}">${sev}</span>
+                    </div>
+                    ${v.description ? `<div style="font-size: 0.9rem; color: var(--text-secondary); margin: 8px 0; line-height: 1.4;">${v.description}</div>` : ''}
+                    <div class="mitre-keyword" style="margin-top: 8px;">
+                      Source: <span>${v.source}</span> ${v.url ? `&nbsp;|&nbsp; Affected URL: <span style="color: var(--accent-blue);">${v.url}</span>` : (v.port ? `&nbsp;|&nbsp; Port: <span style="color: var(--accent-blue);">${v.port}</span>` : '')}
+                    </div>
+                    ${v.raw ? `<div class="finding-detail">${v.raw}</div>` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('vuln-container').innerHTML = vulnsHtml;
+
+      // --- OWASP TOP 10 SUMMARY ---
+      const owaspCounts = {};
+      vulnFindings.forEach(v => {
+        if (v.owasp) {
+          owaspCounts[v.owasp] = (owaspCounts[v.owasp] || 0) + 1;
+        }
+      });
+      
+      if (Object.keys(owaspCounts).length > 0) {
+        const owaspHtml = `
+          <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              OWASP Top 10 Summary
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-top: 15px;">
+              ${Object.entries(owaspCounts).sort((a,b) => b[1] - a[1]).map(([cat, count]) => `
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #A78BFA;">
+                  <span style="font-size: 0.9rem; color: #CBD5E1;">${cat}</span>
+                  <span style="font-weight: bold; color: #F8FAFC;">${count}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        document.getElementById('owasp-summary-container').innerHTML = owaspHtml;
+      }
+    }
+  }
+
+</script>
+</body>
+</html>

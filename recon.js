@@ -1,0 +1,344 @@
+#!/usr/bin/env node
+
+const { execSync, spawn } = require("child_process");
+const fs = require("fs");
+const dns = require("dns").promises;
+const axios = require("axios");
+const path = require("path");
+
+// ===== OPTIONAL: structured WHOIS =====
+let whoisJson;
+try {
+  whoisJson = require("whois-json");
+} catch {
+  whoisJson = null;
+}
+
+// ================= GLOBAL ERROR HANDLING =================
+process.on("uncaughtException", (err) => {
+  console.error("[FATAL] Uncaught Exception:");
+  console.error(err.stack || err.message);
+  writeFatalError(err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[FATAL] Unhandled Promise Rejection:");
+  console.error(reason);
+  writeFatalError(reason);
+});
+
+// ================= CONFIG =================
+const SUBFINDER_TIMEOUT = 90000;
+const HTTP_TIMEOUT = 5000;
+
+// ================= LOGGER =================
+const log = {
+  info: (msg) => console.log(`[INFO] ${msg}`),
+  warn: (msg) => console.warn(`[WARN] ${msg}`),
+  error: (msg) => console.error(`[ERROR] ${msg}`),
+  cmd: (msg) => console.log(`[CMD] ${msg}`)
+};
+
+// ================= ERROR WRITER =================
+function writeFatalError(err) {
+  const errorReport = {
+    status: "failed",
+    error: {
+      message: err.message || String(err),
+      stack: err.stack || null,
+      timestamp: new Date().toISOString()
+    }
+  };
+
+  try {
+    fs.writeFileSync("error.json", JSON.stringify(errorReport, null, 4));
+  } catch { }
+
+  process.exit(1);
+}
+
+const STATE_FILE = "scan_state.json";
+function atomicWrite(file, data) {
+  const tmp = file + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 4));
+  fs.renameSync(tmp, file);
+}
+
+function updateState(dir, stage, progress, message) {
+  atomicWrite(path.join(dir, STATE_FILE), {
+    stage,
+    progress,
+    message,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// ================= CMD =================
+function runCmd(cmd, timeout = 30000) {
+  log.cmd(cmd);
+
+  try {
+    return execSync(cmd, { timeout }).toString().trim();
+  } catch (err) {
+    return {
+      error: true,
+      message: err.message,
+      cmd
+    };
+  }
+}
+
+// ================= TOOL VALIDATION =================
+function checkTool(tool) {
+  const res = runCmd(`which ${tool}`);
+  if (!res || res.error) {
+    log.error(`${tool} is not installed`);
+    return false;
+  }
+  log.info(`${tool} found`);
+  return true;
+}
+
+// ================= UTILS =================
+function extractDomain(input) {
+  try {
+    const url = new URL(input.includes("http") ? input : `http://${input}`);
+    return url.hostname;
+  } catch {
+    return input;
+  }
+}
+
+// ================= DNS =================
+async function resolveDomain(domain) {
+  try {
+    const addresses = await dns.resolve4(domain);
+    if (addresses && addresses.length > 0) {
+      return addresses[0];
+    }
+    return null;
+  } catch (err) {
+    // Fallback to lookup for some environments
+    try {
+      const res = await dns.lookup(domain);
+      return res.address;
+    } catch {
+      log.warn(`DNS failed for ${domain}: ${err.code || err.message}`);
+      return null;
+    }
+  }
+}
+
+// ================= HTTP =================
+async function httpLiveness(domain) {
+  const urls = [];
+
+  for (let scheme of ["https", "http"]) {
+    try {
+      const res = await axios.head(`${scheme}://${domain}`, {
+        timeout: HTTP_TIMEOUT,
+        maxRedirects: 5,
+        validateStatus: () => true
+      });
+
+      if (res.status < 500) {
+        urls.push(`${scheme}://${domain}`);
+      }
+    } catch { }
+  }
+
+  return urls;
+}
+
+// ================= SUBFINDER =================
+function subfinder(domain) {
+  log.info("Running subfinder...");
+
+  if (!checkTool("subfinder")) return [];
+
+  const out = runCmd(`subfinder -d ${domain} -silent`, SUBFINDER_TIMEOUT);
+
+  if (!out || out.error) {
+    log.warn("Subfinder failed or returned no data");
+    return [];
+  }
+
+  const subs = [...new Set(out.split("\n").map(s => s.trim()).filter(Boolean))];
+  log.info(`Subdomains found: ${subs.length}`);
+
+  return subs;
+}
+
+// ================= DIG =================
+function digRecords(domain) {
+  if (!checkTool("dig")) return {};
+
+  const records = {};
+  const types = ["A", "AAAA", "MX", "TXT", "CNAME", "NS"];
+
+  for (let type of types) {
+    const out = runCmd(`dig ${domain} ${type} +short`);
+
+    if (!out || out.error) {
+      log.warn(`dig failed for ${type}`);
+      records[type] = [];
+    } else {
+      records[type] = out.split("\n");
+    }
+  }
+
+  return records;
+}
+
+// ================= WHOIS =================
+async function whoisLookup(domain) {
+  if (whoisJson) {
+    try {
+      return await whoisJson(domain);
+    } catch (err) {
+      log.warn("Structured WHOIS failed, fallback to CLI");
+    }
+  }
+
+  if (!checkTool("whois")) return { error: "whois_not_available" };
+
+  const out = runCmd(`whois ${domain}`);
+
+  if (!out || out.error) {
+    return { error: "whois_failed" };
+  }
+
+  return { raw: out };
+}
+
+// ================= TLS =================
+function tlsInfo(domain) {
+  if (!checkTool("openssl")) return null;
+
+  const out = runCmd(
+    `echo | openssl s_client -connect ${domain}:443 -servername ${domain} 2>/dev/null | openssl x509 -noout -issuer -subject -dates`
+  );
+
+  if (!out || out.error) {
+    return "tls_failed";
+  }
+
+  return out;
+}
+
+// ================= MAIN =================
+async function main() {
+  try {
+    const input = process.argv[2];
+
+    if (!input) {
+      throw new Error("Usage: node recon.js <domain>");
+    }
+
+    const domain = extractDomain(input);
+
+    const scanId = process.env.SCAN_ID || domain.replace(/[^a-z0-9]/gi, "_");
+    const outDir = process.env.OUTPUT_DIR || path.join("results", scanId);
+
+    fs.mkdirSync(outDir, { recursive: true });
+
+    log.info(`Scan ID: ${scanId}`);
+    log.info(`Target: ${domain}`);
+    log.info(`Output: ${outDir}`);
+
+    updateState(outDir, "recon_init", 5, "Initializing Recon...");
+
+    // ===== SUBDOMAIN ENUM =====
+    updateState(outDir, "subdomain_discovery", 10, "Discovering subdomains...");
+    let subs = subfinder(domain);
+
+    if (!subs.length) {
+      log.warn("Fallback to root domain");
+      subs = [domain];
+    }
+
+    // ===== ASSET DISCOVERY WITH HTTPX =====
+    updateState(outDir, "asset_discovery", 12, "Checking asset liveness...");
+
+    const subsFile = path.join(outDir, "subs_to_check.txt");
+    fs.writeFileSync(subsFile, subs.join("\n"));
+
+    log.info("Running httpx-toolkit for liveness check...");
+    // -ip flag gets the IP, -silent for clean output
+    const httpxOut = runCmd(`httpx-toolkit -l ${subsFile} -ip -silent`, 120000);
+
+    const assets = {
+      subdomains: [],
+      ips: [],
+      urls: []
+    };
+
+    if (httpxOut && !httpxOut.error) {
+      const lines = httpxOut.split("\n");
+      for (let line of lines) {
+        if (!line.trim()) continue;
+
+        // httpx output format: http://sub.domain.com [IP]
+        const parts = line.split(" ");
+        const url = parts[0];
+        const ip = parts[1] ? parts[1].replace("[", "").replace("]", "") : null;
+        const sub = new URL(url).hostname;
+
+        assets.subdomains.push(sub);
+        assets.urls.push(url);
+        if (ip) assets.ips.push(ip);
+      }
+    } else {
+      log.warn("httpx-toolkit failed, falling back to basic resolution");
+      // Basic fallback
+      for (let sub of subs) {
+        const ip = await resolveDomain(sub);
+        if (ip) {
+          assets.subdomains.push(sub);
+          assets.ips.push(ip);
+          assets.urls.push(`http://${sub}`, `https://${sub}`);
+        }
+      }
+    }
+
+    // remove duplicates
+    assets.subdomains = [...new Set(assets.subdomains)];
+    assets.ips = [...new Set(assets.ips)];
+    assets.urls = [...new Set(assets.urls)];
+
+    log.info(
+      `Assets → subs=${assets.subdomains.length}, ips=${assets.ips.length}, urls=${assets.urls.length}`
+    );
+
+    updateState(outDir, "recon_dns_tls", 15, `Resolved ${assets.ips.length} assets. Performing DNS/TLS checks...`);
+
+    // ===== REPORT =====
+    const report = {
+      __meta__: {
+        scan_id: scanId,
+        status: "completed",
+        timestamp: new Date().toISOString()
+      },
+      domain,
+      dns: digRecords(domain),
+      whois: await whoisLookup(domain),
+      tls: tlsInfo(domain),
+      assets
+    };
+
+    const reconPath = path.join(outDir, "recon.json");
+    fs.writeFileSync(reconPath, JSON.stringify(report, null, 4));
+
+    const assetsPath = path.join(outDir, "assets.json");
+    const assetsReport = { domain, assets };
+    fs.writeFileSync(assetsPath, JSON.stringify(assetsReport, null, 4));
+
+    log.info("Recon completed successfully");
+
+  } catch (err) {
+    console.error("[FATAL ERROR]", err.message);
+    writeFatalError(err);
+  }
+}
+
+main();

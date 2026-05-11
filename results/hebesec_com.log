@@ -1,0 +1,68 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Recon started
+[INFO] Scan ID: hebesec_com
+[INFO] Target: hebesec.com
+[INFO] Output: results/hebesec_com
+[INFO] Running subfinder...
+[CMD] which subfinder
+[INFO] subfinder found
+[CMD] subfinder -d hebesec.com -silent
+[INFO] Subdomains found: 9
+[INFO] Running httpx-toolkit for liveness check...
+[CMD] httpx-toolkit -l results/hebesec_com/subs_to_check.txt -ip -silent
+[INFO] Assets → subs=3, ips=1, urls=3
+[CMD] which dig
+[INFO] dig found
+[CMD] dig hebesec.com A +short
+[CMD] dig hebesec.com AAAA +short
+[WARN] dig failed for AAAA
+[CMD] dig hebesec.com MX +short
+[CMD] dig hebesec.com TXT +short
+[CMD] dig hebesec.com CNAME +short
+[WARN] dig failed for CNAME
+[CMD] dig hebesec.com NS +short
+[CMD] which whois
+[INFO] whois found
+[CMD] whois hebesec.com
+[CMD] which openssl
+[INFO] openssl found
+[CMD] echo | openssl s_client -connect hebesec.com:443 -servername hebesec.com 2>/dev/null | openssl x509 -noout -issuer -subject -dates
+[INFO] Recon completed successfully
+[PIPELINE] Recon completed
+
+[PIPELINE] Vulnerability scan started
+[VULN] Nmap started on hebesec.com (Aggressive mode)...
+[CMD] nmap -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21,22,25,53,80,110,143,443,445,3306,3389,8080,8443 hebesec.com -oN results/hebesec_com/nmap.txt
+[VULN] Nmap finished for hebesec.com
+[VULN] Nuclei started on 3 targets (Concurrency: 100)...
+[CMD] nuclei -l results/hebesec_com/urls.txt -t ~/nuclei-templates/http/cves -t ~/nuclei-templates/http/vulnerabilities -c 100 -bs 100 -ss host-spray -no-update-templates -no-update-check -jle results/hebesec_com/nuclei.jsonl
+[VULN] Nuclei finished
+[VULN] Nikto batch started for https://beta.hebesec.com, https://www.hebesec.com...
+[CMD] nikto -h https://beta.hebesec.com -Tuning 123 -nointeractive
+[CMD] nikto -h https://www.hebesec.com -Tuning 123 -nointeractive
+[VULN] Nikto finished for https://beta.hebesec.com
+[VULN] Nikto finished for https://www.hebesec.com
+[VULN] Nikto batch started for https://wedding.hebesec.com...
+[CMD] nikto -h https://wedding.hebesec.com -Tuning 123 -nointeractive
+[VULN] Nikto finished for https://wedding.hebesec.com
+[CMD] searchsploit --cve CVE-2026-35414
+[CMD] searchsploit --cve CVE-2026-35386
+[CMD] searchsploit --cve CVE-2026-35385
+[CMD] searchsploit --cve CVE-2024-6387
+[CMD] searchsploit --cve CVE-2024-39894
+[CMD] searchsploit --cve CVE-2025-26465
+[CMD] searchsploit --cve CVE-2026-35387
+[CMD] searchsploit --cve CVE-2025-26466
+[CMD] searchsploit --cve CVE-2025-32728
+[CMD] searchsploit --cve CVE-2025-61985
+[CMD] searchsploit --cve CVE-2025-61984
+[CMD] searchsploit --cve CVE-2026-35388
+✅ Scan Completed
+[PIPELINE] Vulnerability scan completed
+
+[PIPELINE] Threat intelligence started
+[PIPELINE] Threat intelligence completed
+
+[PIPELINE] ✅ Final report generated: results/hebesec_com/unified_report.json

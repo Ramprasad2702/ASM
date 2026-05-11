@@ -1,0 +1,68 @@
+{
+    "__meta__": {
+        "scan_id": "drmcet_ac_in",
+        "status": "completed",
+        "timestamp": "2026-05-11T05:04:19.997Z"
+    },
+    "domain": "drmcet.ac.in",
+    "dns": {
+        "A": [
+            "35.154.13.35"
+        ],
+        "AAAA": [],
+        "MX": [
+            "0 drmcet-ac-in.mail.protection.outlook.com."
+        ],
+        "TXT": [
+            "\"v=spf1 include:spf.protection.outlook.com -all\"",
+            "\"MS=ms77498053\""
+        ],
+        "CNAME": [],
+        "NS": [
+            "ns-cloud-e1.googledomains.com.",
+            "ns-cloud-e3.googledomains.com.",
+            "ns-cloud-e4.googledomains.com.",
+            "ns-cloud-e2.googledomains.com."
+        ]
+    },
+    "whois": {
+        "error": "whois_failed"
+    },
+    "tls": "issuer=C=US, O=Let's Encrypt, CN=E8\nsubject=CN=drmcet.ac.in\nnotBefore=Apr 17 02:58:05 2026 GMT\nnotAfter=Jul 16 02:58:04 2026 GMT",
+    "assets": {
+        "subdomains": [
+            "src.drmcet.ac.in",
+            "grievances.drmcet.ac.in",
+            "student.drmcet.ac.in",
+            "cibie.drmcet.ac.in",
+            "sgs.drmcet.ac.in",
+            "www.drmcet.ac.in",
+            "sproutlms.drmcet.ac.in",
+            "alumni.drmcet.ac.in",
+            "myfiles.drmcet.ac.in",
+            "career.drmcet.ac.in"
+        ],
+        "ips": [
+            "3.109.10.58",
+            "118.91.234.45",
+            "118.91.232.141",
+            "203.57.85.54",
+            "35.154.13.35",
+            "92.112.197.162",
+            "118.91.232.115",
+            "65.2.101.12"
+        ],
+        "urls": [
+            "https://src.drmcet.ac.in",
+            "https://grievances.drmcet.ac.in",
+            "https://student.drmcet.ac.in",
+            "https://cibie.drmcet.ac.in",
+            "http://sgs.drmcet.ac.in",
+            "https://www.drmcet.ac.in",
+            "https://sproutlms.drmcet.ac.in",
+            "https://alumni.drmcet.ac.in",
+            "https://myfiles.drmcet.ac.in",
+            "https://career.drmcet.ac.in"
+        ]
+    }
+}

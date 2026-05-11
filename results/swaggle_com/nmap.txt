@@ -1,0 +1,97 @@
+# Nmap 7.99 scan initiated Mon May  4 07:23:39 2026 as: /usr/lib/nmap/nmap --privileged -sS -sV -sC --script vuln -p 21,22,25,53,80,110,143,443,445,3306,3389,8080,8443 -oN results/swaggle_com/nmap.txt swaggle.com
+Nmap scan report for swaggle.com (15.197.225.128)
+Host is up (0.0091s latency).
+Other addresses for swaggle.com (not scanned): 3.33.251.168
+rDNS record for 15.197.225.128: aec037177372cc6cd.awsglobalaccelerator.com
+
+PORT     STATE    SERVICE       VERSION
+21/tcp   filtered ftp
+22/tcp   filtered ssh
+25/tcp   filtered smtp
+53/tcp   filtered domain
+80/tcp   open     http          AWS Elastic Load Balancing
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+|_http-csrf: Couldn't find any CSRF vulnerabilities.
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-server-header: awselb/2.0
+110/tcp  filtered pop3
+143/tcp  filtered imap
+443/tcp  open     ssl/http      Golang net/http server
+|_http-csrf: Couldn't find any CSRF vulnerabilities.
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-server-header: awselb/2.0
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 422 Unprocessable Entity
+|     Content-Type: text/plain; charset=utf-8
+|     X-Content-Type-Options: nosniff
+|     Date: Mon, 04 May 2026 11:24:11 GMT
+|     Content-Length: 21
+|     Unprocessable Entity
+|   GenericLines, Help, LPDString, RTSPRequest, SIPOptions, SSLSessionReq, Socks5: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 422 Unprocessable Entity
+|     Content-Type: text/plain; charset=utf-8
+|     X-Content-Type-Options: nosniff
+|     Date: Mon, 04 May 2026 11:24:10 GMT
+|     Content-Length: 21
+|     Unprocessable Entity
+|   HTTPOptions: 
+|     HTTP/1.0 405 Method Not Allowed
+|     Allow: GET, HEAD
+|     Content-Type: text/plain; charset=utf-8
+|     X-Content-Type-Options: nosniff
+|     Date: Mon, 04 May 2026 11:24:10 GMT
+|     Content-Length: 19
+|     Method Not Allowed
+|   OfficeScan: 
+|     HTTP/1.1 400 Bad Request: missing required Host header
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|_    Request: missing required Host header
+445/tcp  filtered microsoft-ds
+3306/tcp filtered mysql
+3389/tcp filtered ms-wbt-server
+8080/tcp filtered http-proxy
+8443/tcp filtered https-alt
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port443-TCP:V=7.99%T=SSL%I=7%D=5/4%Time=69F881D5%P=x86_64-pc-linux-gnu%
+SF:r(GetRequest,BD,"HTTP/1\.0\x20422\x20Unprocessable\x20Entity\r\nContent
+SF:-Type:\x20text/plain;\x20charset=utf-8\r\nX-Content-Type-Options:\x20no
+SF:sniff\r\nDate:\x20Mon,\x2004\x20May\x202026\x2011:24:10\x20GMT\r\nConte
+SF:nt-Length:\x2021\r\n\r\nUnprocessable\x20Entity\n")%r(HTTPOptions,CB,"H
+SF:TTP/1\.0\x20405\x20Method\x20Not\x20Allowed\r\nAllow:\x20GET,\x20HEAD\r
+SF:\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nX-Content-Type-Optio
+SF:ns:\x20nosniff\r\nDate:\x20Mon,\x2004\x20May\x202026\x2011:24:10\x20GMT
+SF:\r\nContent-Length:\x2019\r\n\r\nMethod\x20Not\x20Allowed\n")%r(FourOhF
+SF:ourRequest,BD,"HTTP/1\.0\x20422\x20Unprocessable\x20Entity\r\nContent-T
+SF:ype:\x20text/plain;\x20charset=utf-8\r\nX-Content-Type-Options:\x20nosn
+SF:iff\r\nDate:\x20Mon,\x2004\x20May\x202026\x2011:24:11\x20GMT\r\nContent
+SF:-Length:\x2021\r\n\r\nUnprocessable\x20Entity\n")%r(GenericLines,67,"HT
+SF:TP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20cha
+SF:rset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(RTS
+SF:PRequest,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20tex
+SF:t/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20
+SF:Request")%r(Help,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type
+SF::\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x2
+SF:0Bad\x20Request")%r(SSLSessionReq,67,"HTTP/1\.1\x20400\x20Bad\x20Reques
+SF:t\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20cl
+SF:ose\r\n\r\n400\x20Bad\x20Request")%r(LPDString,67,"HTTP/1\.1\x20400\x20
+SF:Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConn
+SF:ection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(SIPOptions,67,"HTTP/1
+SF:\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset
+SF:=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(Socks5,
+SF:67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\
+SF:x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")
+SF:%r(OfficeScan,A3,"HTTP/1\.1\x20400\x20Bad\x20Request:\x20missing\x20req
+SF:uired\x20Host\x20header\r\nContent-Type:\x20text/plain;\x20charset=utf-
+SF:8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request:\x20missing\x20r
+SF:equired\x20Host\x20header");
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon May  4 07:32:06 2026 -- 1 IP address (1 host up) scanned in 506.71 seconds

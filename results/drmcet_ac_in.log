@@ -1,0 +1,151 @@
+◇ injected env (2) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Recon started
+[INFO] Scan ID: drmcet_ac_in
+[INFO] Target: drmcet.ac.in
+[INFO] Output: results/drmcet_ac_in
+[INFO] Running subfinder...
+[CMD] which subfinder
+[INFO] subfinder found
+[CMD] subfinder -d drmcet.ac.in -silent
+[INFO] Subdomains found: 13
+[INFO] Running httpx-toolkit for liveness check...
+[CMD] httpx-toolkit -l results/drmcet_ac_in/subs_to_check.txt -ip -silent
+[INFO] Assets → subs=10, ips=8, urls=10
+[CMD] which dig
+[INFO] dig found
+[CMD] dig drmcet.ac.in A +short
+[CMD] dig drmcet.ac.in AAAA +short
+[WARN] dig failed for AAAA
+[CMD] dig drmcet.ac.in MX +short
+[CMD] dig drmcet.ac.in TXT +short
+[CMD] dig drmcet.ac.in CNAME +short
+[WARN] dig failed for CNAME
+[CMD] dig drmcet.ac.in NS +short
+[CMD] which whois
+[INFO] whois found
+[CMD] whois drmcet.ac.in
+[CMD] which openssl
+[INFO] openssl found
+[CMD] echo | openssl s_client -connect drmcet.ac.in:443 -servername drmcet.ac.in 2>/dev/null | openssl x509 -noout -issuer -subject -dates
+[INFO] Recon completed successfully
+[PIPELINE] Recon completed
+
+[PIPELINE] Vulnerability scan started
+[VULN] Nmap started on drmcet.ac.in (Aggressive mode)...
+[CMD] nmap -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21,22,25,53,80,110,143,443,445,3306,3389,8080,8443 drmcet.ac.in -oN results/drmcet_ac_in/nmap.txt
+[VULN] Nuclei started on 3 targets (Concurrency: 50)...
+[CMD] nuclei -l results/drmcet_ac_in/urls.txt -t /home/kali/nuclei-templates/http/cves -t /home/kali/nuclei-templates/http/vulnerabilities -t /home/kali/nuclei-templates/http/exposures -t /home/kali/nuclei-templates/http/misconfiguration -t /home/kali/nuclei-templates/http/technologies -t /home/kali/nuclei-templates/http/exposed-panels -c 50 -rl 150 -mhe 30 -ss host-spray -duc -timeout 5 -retries 0 -jle results/drmcet_ac_in/nuclei.jsonl 2>&1
+[VULN] Nikto batch started for https://student.drmcet.ac.in, https://src.drmcet.ac.in...
+[CMD] nikto -h https://student.drmcet.ac.in -Tuning 123 -nointeractive
+[CMD] nikto -h https://src.drmcet.ac.in -Tuning 123 -nointeractive
+[VULN] Nikto finished for https://student.drmcet.ac.in
+[VULN] Nmap finished for drmcet.ac.in
+[VULN] Nikto finished for https://src.drmcet.ac.in
+[VULN] Nikto batch started for https://career.drmcet.ac.in...
+[CMD] nikto -h https://career.drmcet.ac.in -Tuning 123 -nointeractive
+[VULN] Nikto finished for https://career.drmcet.ac.in
+[VULN] Nuclei output preview:                       __     _    ____  __  _______/ /__  (_)   / __ \/ / / / ___/ / _ \/ /  / / / / /_/ / /__/ /  __/ / /_/ /_/\__,_/\___/_/\___/_/   v3.7.1  		projectdiscovery.io  [[93mWRN[0m] The concurrency value is higher than max-host-error [[34mINF[0m] Adjusting max-host-error to the concurrency value: 50 [[34mINF[0m] Current nuclei version: v3.7.1 ([93munknown[0m) - remove '-duc' flag to enable update checks [[34mINF[0m] Current nuclei-templates version: v10.4.3 ([93munknown[
+[VULN] Nuclei finished
+✅ Scan Completed
+[PIPELINE] Vulnerability scan completed
+
+[PIPELINE] Threat intelligence started
+[THREAT] Starting threat intel for domain=drmcet.ac.in, ips=8, urls=10
+[THREAT] Querying VT + OTX for drmcet.ac.in...
+[THREAT] VT malicious=0, OTX pulses=1
+[THREAT] URLscan public search for drmcet.ac.in...
+[THREAT] URLscan: 3 scans, 0 supply chain entries
+[THREAT] IP enrichment for 118.91.234.45...
+[THREAT] Shodan 118.91.234.45: ports=541, vulns=0
+[THREAT] IP enrichment for 3.109.10.58...
+[THREAT] Shodan 3.109.10.58: ports=443, vulns=0
+[THREAT] IP enrichment for 118.91.232.115...
+[THREAT] Shodan 118.91.232.115: ports=110, vulns=0
+[THREAT] IP enrichment for 65.2.101.12...
+[THREAT] Shodan 65.2.101.12: ports=443, vulns=0
+[THREAT] IP enrichment for 203.57.85.54...
+[THREAT] Shodan 203.57.85.54: ports=22,80,3000, vulns=2
+[THREAT] URL enrichment for https://student.drmcet.ac.in...
+[THREAT] URL enrichment for https://src.drmcet.ac.in...
+[THREAT] URL enrichment for https://career.drmcet.ac.in...
+[THREAT] Complete. Risk=MEDIUM (30), MITRE=2, Supply=0
+[PIPELINE] Threat intelligence completed
+
+[PIPELINE] ✅ Final report generated: results/drmcet_ac_in/unified_report.json
+◇ injected env (2) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Recon started
+[INFO] Scan ID: drmcet_ac_in
+[INFO] Target: drmcet.ac.in
+[INFO] Output: results/drmcet_ac_in
+[INFO] Running subfinder...
+[CMD] which subfinder
+[INFO] subfinder found
+[CMD] subfinder -d drmcet.ac.in -silent
+[INFO] Subdomains found: 13
+[INFO] Running httpx-toolkit for liveness check...
+[CMD] httpx-toolkit -l results/drmcet_ac_in/subs_to_check.txt -ip -silent
+[INFO] Assets → subs=10, ips=8, urls=10
+[CMD] which dig
+[INFO] dig found
+[CMD] dig drmcet.ac.in A +short
+[CMD] dig drmcet.ac.in AAAA +short
+[WARN] dig failed for AAAA
+[CMD] dig drmcet.ac.in MX +short
+[CMD] dig drmcet.ac.in TXT +short
+[CMD] dig drmcet.ac.in CNAME +short
+[WARN] dig failed for CNAME
+[CMD] dig drmcet.ac.in NS +short
+[CMD] which whois
+[INFO] whois found
+[CMD] whois drmcet.ac.in
+[CMD] which openssl
+[INFO] openssl found
+[CMD] echo | openssl s_client -connect drmcet.ac.in:443 -servername drmcet.ac.in 2>/dev/null | openssl x509 -noout -issuer -subject -dates
+[INFO] Recon completed successfully
+[PIPELINE] Recon completed
+
+[PIPELINE] Vulnerability scan started
+[VULN] Nmap started on drmcet.ac.in (Aggressive mode)...
+[CMD] nmap -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21,22,25,53,80,110,143,443,445,3306,3389,8080,8443 drmcet.ac.in -oN results/drmcet_ac_in/nmap.txt
+[VULN] Nuclei started on 3 targets (Concurrency: 50)...
+[CMD] nuclei -l results/drmcet_ac_in/urls.txt -t /home/kali/nuclei-templates/http/cves -t /home/kali/nuclei-templates/http/vulnerabilities -t /home/kali/nuclei-templates/http/exposures -t /home/kali/nuclei-templates/http/misconfiguration -t /home/kali/nuclei-templates/http/technologies -t /home/kali/nuclei-templates/http/exposed-panels -c 50 -rl 150 -mhe 30 -ss host-spray -duc -timeout 5 -retries 0 -jle results/drmcet_ac_in/nuclei.jsonl 2>&1
+[VULN] Nikto batch started for https://src.drmcet.ac.in, https://grievances.drmcet.ac.in...
+[CMD] nikto -h https://src.drmcet.ac.in -Tuning 123 -nointeractive
+[CMD] nikto -h https://grievances.drmcet.ac.in -Tuning 123 -nointeractive
+[VULN] Nikto finished for https://grievances.drmcet.ac.in
+[VULN] Nikto finished for https://src.drmcet.ac.in
+[VULN] Nikto batch started for https://student.drmcet.ac.in...
+[CMD] nikto -h https://student.drmcet.ac.in -Tuning 123 -nointeractive
+[VULN] Nikto finished for https://student.drmcet.ac.in
+[VULN] Nmap finished for drmcet.ac.in
+[VULN] Nuclei output preview:                       __     _    ____  __  _______/ /__  (_)   / __ \/ / / / ___/ / _ \/ /  / / / / /_/ / /__/ /  __/ / /_/ /_/\__,_/\___/_/\___/_/   v3.7.1  		projectdiscovery.io  [[93mWRN[0m] The concurrency value is higher than max-host-error [[34mINF[0m] Adjusting max-host-error to the concurrency value: 50 [[34mINF[0m] Current nuclei version: v3.7.1 ([93munknown[0m) - remove '-duc' flag to enable update checks [[34mINF[0m] Current nuclei-templates version: v10.4.3 ([93munknown[
+[VULN] Nuclei finished
+✅ Scan Completed
+[PIPELINE] Vulnerability scan completed
+
+[PIPELINE] Threat intelligence started
+[THREAT] Starting threat intel for domain=drmcet.ac.in, ips=8, urls=10
+[THREAT] Querying VT + OTX for drmcet.ac.in...
+[THREAT] VT malicious=0, OTX pulses=1
+[THREAT] URLscan public search for drmcet.ac.in...
+[THREAT] URLscan: 3 scans, 0 supply chain entries
+[THREAT] IP enrichment for 3.109.10.58...
+[THREAT] Shodan 3.109.10.58: ports=443, vulns=0
+[THREAT] IP enrichment for 118.91.234.45...
+[THREAT] Shodan 118.91.234.45: ports=541, vulns=0
+[THREAT] IP enrichment for 118.91.232.141...
+[THREAT] Shodan 118.91.232.141: ports=21,25,80,110,143,443,465,993,995,1433,8443, vulns=0
+[THREAT] IP enrichment for 203.57.85.54...
+[THREAT] Shodan 203.57.85.54: ports=22,80,3000, vulns=2
+[THREAT] IP enrichment for 35.154.13.35...
+[THREAT] URL enrichment for https://src.drmcet.ac.in...
+[THREAT] URL enrichment for https://grievances.drmcet.ac.in...
+[THREAT] URL enrichment for https://student.drmcet.ac.in...
+[THREAT] Complete. Risk=MEDIUM (30), MITRE=2, Supply=0
+[PIPELINE] Threat intelligence completed
+
+[PIPELINE] ✅ Final report generated: results/drmcet_ac_in/unified_report.json

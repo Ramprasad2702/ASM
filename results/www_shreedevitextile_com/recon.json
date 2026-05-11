@@ -1,0 +1,33 @@
+{
+    "__meta__": {
+        "scan_id": "www_shreedevitextile_com",
+        "status": "completed",
+        "timestamp": "2026-05-10T11:12:55.733Z"
+    },
+    "domain": "www.shreedevitextile.com",
+    "dns": {
+        "A": [
+            "157.245.108.208"
+        ],
+        "AAAA": [],
+        "MX": [],
+        "TXT": [],
+        "CNAME": [],
+        "NS": []
+    },
+    "whois": {
+        "error": "whois_failed"
+    },
+    "tls": "issuer=C=US, O=Let's Encrypt, CN=E7\nsubject=CN=shreedevitextile.com\nnotBefore=Mar 17 09:19:06 2026 GMT\nnotAfter=Jun 15 09:19:05 2026 GMT",
+    "assets": {
+        "subdomains": [
+            "www.shreedevitextile.com"
+        ],
+        "ips": [
+            "157.245.108.208"
+        ],
+        "urls": [
+            "https://www.shreedevitextile.com"
+        ]
+    }
+}

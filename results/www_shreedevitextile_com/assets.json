@@ -1,0 +1,14 @@
+{
+    "domain": "www.shreedevitextile.com",
+    "assets": {
+        "subdomains": [
+            "www.shreedevitextile.com"
+        ],
+        "ips": [
+            "157.245.108.208"
+        ],
+        "urls": [
+            "https://www.shreedevitextile.com"
+        ]
+    }
+}
