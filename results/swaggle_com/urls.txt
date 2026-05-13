@@ -1,3 +1,0 @@
-https://flybuyspointsapi-staging.swaggle.com
-http://flybuyspointsapi-staging.swaggle.com
-https://www.swaggle.com

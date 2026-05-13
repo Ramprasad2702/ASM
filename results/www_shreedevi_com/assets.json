@@ -1,0 +1,14 @@
+{
+    "domain": "www.shreedevi.com",
+    "assets": {
+        "subdomains": [
+            "www.shreedevi.com"
+        ],
+        "ips": [
+            "13.248.169.48"
+        ],
+        "urls": [
+            "https://www.shreedevi.com"
+        ]
+    }
+}

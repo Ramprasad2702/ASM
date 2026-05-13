@@ -491,6 +491,10 @@
           <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
           Brand Monitoring
         </li>
+        <li class="nav-item" onclick="switchTab('tab-history')">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Scan History
+        </li>
       </ul>
     </div>
 
@@ -620,13 +624,36 @@
         <div class="content-header">
           <h2 class="content-title">Asset Discovery</h2>
         </div>
+        
+        <div id="dns-section">
+          <h3 class="section-title">DNS Records</h3>
+          <div id="dns-container" class="stats-grid">
+            <div class="empty-state">No DNS records found.</div>
+          </div>
+        </div>
+
+        <div id="tls-section">
+          <h3 class="section-title">TLS/SSL Certificate</h3>
+          <div id="tls-container">
+            <div class="empty-state">No TLS information available.</div>
+          </div>
+        </div>
+
         <h3 class="section-title">Discovered IP Geolocations</h3>
         <div class="stats-grid" id="geo-grid">
           <div class="empty-state">No geolocation data found.</div>
         </div>
+
         <h3 class="section-title">Open Services</h3>
         <div id="services-container">
           <div class="empty-state">No services identified.</div>
+        </div>
+
+        <div id="whois-section">
+          <h3 class="section-title">WHOIS Information</h3>
+          <div id="whois-container">
+            <div class="empty-state">No WHOIS data available.</div>
+          </div>
         </div>
       </div>
 
@@ -649,6 +676,30 @@
         <p class="empty-state">Monitoring target brand presence across malicious domains, phishing kits, and deep/dark web sources.</p>
       </div>
 
+      <!-- Scan History Tab -->
+      <div id="tab-history" class="tab-content" style="display: none;">
+        <div class="content-header">
+          <h2 class="content-title">Scan History</h2>
+        </div>
+        <div id="history-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th>Risk</th>
+                <th>Assets</th>
+                <th>Findings</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="6" class="empty-state">Loading history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -664,6 +715,10 @@
     const targetTab = document.getElementById(tabId);
     if (targetTab) {
       targetTab.style.display = 'block';
+    }
+
+    if (tabId === 'tab-history') {
+      loadHistory();
     }
     
     // Find and highlight correct nav item
@@ -851,7 +906,58 @@
     }
 
     // --- Asset Discovery Tab Updates ---
+    const reconData = data.recon || {};
     const allUrls = data.recon_summary?.urls_list || [];
+    
+    // DNS Records
+    if (reconData.dns) {
+      const dnsHtml = Object.entries(reconData.dns).map(([type, records]) => {
+        if (!records || records.length === 0) return '';
+        return `
+          <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+            <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 5px;">${type}</div>
+            ${records.map(r => `<div style="color: var(--text-secondary); font-size: 0.85rem; word-break: break-all;">${r}</div>`).join('')}
+          </div>
+        `;
+      }).join('');
+      if (dnsHtml) document.getElementById('dns-container').innerHTML = dnsHtml;
+    }
+
+    // TLS Info
+    if (reconData.tls) {
+      const tlsContent = document.getElementById('tls-container');
+      if (reconData.tls === 'tls_failed') {
+        tlsContent.innerHTML = `
+          <div class="empty-state" style="color: var(--risk-high); padding: 20px;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="margin-bottom: 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            SSL/TLS certificate retrieval failed. The host may not be serving HTTPS or the connection timed out.
+          </div>
+        `;
+      } else {
+        tlsContent.innerHTML = `
+          <div class="finding-detail" style="border-left-color: #38BDF8;">${reconData.tls}</div>
+        `;
+      }
+    }
+
+    // WHOIS Info
+    if (reconData.whois) {
+      const whoisContent = document.getElementById('whois-container');
+      if (reconData.whois.error) {
+        whoisContent.innerHTML = `
+          <div class="empty-state" style="color: var(--risk-high);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="margin-bottom: 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            WHOIS lookup failed for this domain. This can happen for invalid domains or connection timeouts.
+          </div>
+        `;
+      } else {
+        const whoisRaw = reconData.whois.raw || JSON.stringify(reconData.whois, null, 2);
+        whoisContent.innerHTML = `
+          <div class="finding-detail" style="border-left-color: #A78BFA; max-height: 400px; overflow-y: auto;">${whoisRaw}</div>
+        `;
+      }
+    }
+
     if (allUrls.length > 0) {
       const urlsHtml = `
         <h3 class="section-title">Discovered Assets & URLs</h3>
@@ -869,13 +975,14 @@
          const div = document.createElement('div');
          div.id = 'urls-section';
          div.innerHTML = urlsHtml;
-         assetTab.insertBefore(div, assetTab.querySelector('.section-title'));
+         // Insert before WHOIS
+         assetTab.insertBefore(div, document.getElementById('whois-section'));
       } else {
          document.getElementById('urls-section').innerHTML = urlsHtml;
       }
     }
 
-    // --- NEW: Asset Discovery ---
+    // --- NEW: Asset Discovery (Geo & Services) ---
     if (vuln.geo && Object.keys(vuln.geo).length > 0) {
       const geoHtml = Object.keys(vuln.geo).map(ip => {
         const info = vuln.geo[ip];
@@ -990,6 +1097,60 @@
         `;
         document.getElementById('owasp-summary-container').innerHTML = owaspHtml;
       }
+    }
+  }
+
+  async function loadHistory() {
+    try {
+      const res = await fetch('/scans');
+      const history = await res.json();
+      
+      const tbody = document.getElementById('history-tbody');
+      if (history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No scans found.</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = history.map(h => {
+        const riskClass = `risk-${(h.risk || 'low').toLowerCase()}`;
+        const date = new Date(h.timestamp).toLocaleString();
+        
+        return `
+          <tr>
+            <td style="color:var(--text-primary); font-weight:600;">${h.target}</td>
+            <td><span class="badge ${riskClass}">${h.risk || 'UNKNOWN'}</span></td>
+            <td>${h.assets || 0}</td>
+            <td>${h.vulns || 0}</td>
+            <td style="color:var(--text-secondary); font-size:0.85rem;">${date}</td>
+            <td>
+              <button class="scan-button" style="padding:6px 12px; font-size:0.8rem;" onclick="loadScan('${h.id}')">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      document.getElementById('history-tbody').innerHTML = '<tr><td colspan="6" class="empty-state">Error loading history.</td></tr>';
+    }
+  }
+
+  async function loadScan(scanId) {
+    try {
+      // UI Transition
+      document.getElementById('home-view').style.display = 'none';
+      document.getElementById('loading-view').style.display = 'flex';
+      document.getElementById('loading-msg').innerText = `Loading archived report...`;
+      document.getElementById('progress-bar').style.width = '100%';
+      document.getElementById('loading-status').innerText = 'Retrieving unified report from storage';
+
+      const res = await fetch(`/results/${scanId}/unified_report.json`);
+      if (!res.ok) throw new Error('Report not found');
+      
+      const data = await res.json();
+      renderDashboard(data);
+      switchTab('tab-dashboard');
+    } catch (err) {
+      alert(err.message);
+      switchTab('tab-history');
     }
   }
 

@@ -1,6 +1,0 @@
-{
-    "stage": "recon_dns_tls",
-    "progress": 15,
-    "message": "Resolved 1 assets. Performing DNS/TLS checks...",
-    "timestamp": "2026-05-11T05:27:19.925Z"
-}

@@ -196,20 +196,31 @@ async function urlscanSearch(domain) {
 // ================= URLSCAN SUBMIT (requires API key) =================
 async function urlscanSubmit(url) {
   if (!URLSCAN_API_KEY) return {};
+  const apiKey = URLSCAN_API_KEY.replace(/["']/g, "").trim();
 
   try {
     const submit = await axios.post(
       "https://urlscan.io/api/v1/scan/",
       { url, visibility: "unlisted" },
-      { headers: { "API-Key": URLSCAN_API_KEY }, timeout: TIMEOUT }
+      { headers: { "API-Key": apiKey }, timeout: TIMEOUT }
     );
+    
     const uuid = submit.data.uuid;
-    for (let i = 0; i < 5; i++) {
+    if (!uuid) return {};
+
+    // Poll for results (up to 10 attempts, 6s apart = 60s total)
+    for (let i = 0; i < 10; i++) {
       await new Promise(r => setTimeout(r, 6000));
-      const res = await safeGet(`https://urlscan.io/api/v1/result/${uuid}/`);
-      if (res) return res;
+      const res = await safeGet(
+        `https://urlscan.io/api/v1/result/${uuid}/`,
+        { "API-Key": apiKey }
+      );
+      // Ensure we got a valid result object back
+      if (res && (res.task || res.page)) return res;
     }
-  } catch {}
+  } catch (err) {
+    console.error(`[THREAT] URLScan submit failed for ${url}:`, err.message);
+  }
   return {};
 }
 
@@ -310,25 +321,25 @@ async function runThreatIntel(domain, ips = [], urls = []) {
 
   // --- Domain lookups ---
   if (domain) {
-    console.log(`[THREAT] Querying VT + OTX for ${domain}...`);
+    console.log(`[THREAT] Querying intelligence databases for ${domain}...`);
     [vtDomain, otxDomain, passiveDnsRecords] = await Promise.all([
       vtLookup(`https://www.virustotal.com/api/v3/domains/${domain}`),
       otxLookup(`https://otx.alienvault.com/api/v1/indicators/domain/${domain}/general`),
       passiveDNS(domain)
     ]);
-    console.log(`[THREAT] VT malicious=${vtDomain.malicious}, OTX pulses=${otxDomain.pulse_count}`);
+    console.log(`[THREAT] Intel results: detections=${vtDomain.malicious}, pulses=${otxDomain.pulse_count}`);
   }
 
-  // --- URLscan public search (no key needed) ---
+  // --- Historical record search ---
   let urlscanPublic = { scans: [], supply_chain_risks: [] };
   if (domain) {
-    console.log(`[THREAT] URLscan public search for ${domain}...`);
+    console.log(`[THREAT] Performing historical record search for ${domain}...`);
     urlscanPublic = await urlscanSearch(domain);
     supplyChainAll.push(...(urlscanPublic.supply_chain_risks || []));
-    console.log(`[THREAT] URLscan: ${urlscanPublic.scans.length} scans, ${urlscanPublic.supply_chain_risks.length} supply chain entries`);
+    console.log(`[THREAT] Search results: records=${urlscanPublic.scans.length}, supply_chain=${urlscanPublic.supply_chain_risks.length}`);
   }
 
-  // --- IP enrichment: Shodan InternetDB + OTX + AbuseIPDB ---
+  // --- IP enrichment: Intelligence Sources ---
   for (let ip of ips.slice(0, 5)) {
     console.log(`[THREAT] IP enrichment for ${ip}...`);
     const [otxIp, abuseData, shodanData] = await Promise.all([

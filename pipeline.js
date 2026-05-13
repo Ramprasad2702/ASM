@@ -12,12 +12,17 @@ function runNode(script, args = []) {
   });
 }
 
+function updateState(dir, stage, progress, message) {
+  const state = { stage, progress, message, updated_at: new Date().toISOString() };
+  fs.writeFileSync(path.join(dir, "scan_state.json"), JSON.stringify(state, null, 4));
+}
+
 // ================= MAIN PIPELINE =================
 async function runPipeline(target) {
   console.log("[PIPELINE] Starting full scan...\n");
 
-  // ================= STEP 1: RECON =================
-  console.log("[PIPELINE] Recon started");
+  // ================= STEP 1: ASSET DISCOVERY =================
+  console.log("[PIPELINE] Initializing Asset Discovery...");
   await runNode("recon.js", [target]);
 
   const safeTarget = target.replace(/[^a-z0-9]/gi, "_");
@@ -25,39 +30,45 @@ async function runPipeline(target) {
   const assetsPath = path.join(dir, "assets.json");
 
   if (!fs.existsSync(assetsPath)) {
-    console.log("[PIPELINE] Recon failed ❌");
+    console.log("[PIPELINE] Asset Discovery failed ❌");
     return;
   }
 
-  console.log("[PIPELINE] Recon completed\n");
+  console.log("[PIPELINE] Asset Discovery completed\n");
 
-  // ================= STEP 2: VULN =================
-  console.log("[PIPELINE] Vulnerability scan started");
+  // ================= STEP 2: SECURITY ANALYSIS =================
+  console.log("[PIPELINE] Initiating Security Analysis...");
   await runNode("vuln.js", [assetsPath]);
 
   const vulnPath = path.join(dir, "final_report.json");
 
   if (!fs.existsSync(vulnPath)) {
-    console.log("[PIPELINE] Vuln scan failed ❌");
+    console.log("[PIPELINE] Security Analysis failed ❌");
     return;
   }
 
-  console.log("[PIPELINE] Vulnerability scan completed\n");
+  console.log("[PIPELINE] Security Analysis completed\n");
 
   // ================= LOAD DATA =================
   const assets = JSON.parse(fs.readFileSync(assetsPath));
   const vuln = JSON.parse(fs.readFileSync(vulnPath));
+  
+  let recon = {};
+  const reconJsonPath = path.join(dir, "recon.json");
+  if (fs.existsSync(reconJsonPath)) {
+    recon = JSON.parse(fs.readFileSync(reconJsonPath));
+  }
 
   const domain = assets.domain || target;
   const ips = assets.assets.ips || [];
   const urls = assets.assets.urls || [];
 
-  // ================= STEP 3: THREAT INTEL =================
-  console.log("[PIPELINE] Threat intelligence started");
+  // ================= STEP 3: THREAT ANALYSIS =================
+  console.log("[PIPELINE] Running Threat Intelligence Analysis...");
 
   const intel = await runThreatIntel(domain, ips, urls);
 
-  console.log("[PIPELINE] Threat intelligence completed\n");
+  console.log("[PIPELINE] Threat Intelligence Analysis completed\n");
 
   // ================= STEP 4: FINAL RISK =================
 
@@ -65,6 +76,7 @@ async function runPipeline(target) {
 
   const finalReport = {
     target,
+    recon,
     recon_summary: {
       ips: ips.length,
       urls: urls.length,
@@ -78,6 +90,8 @@ async function runPipeline(target) {
 
   const output = path.join(dir, "unified_report.json");
   fs.writeFileSync(output, JSON.stringify(finalReport, null, 4));
+
+  updateState(dir, "completed", 100, "Analysis complete. Generating dashboard...");
 
   console.log("[PIPELINE] ✅ Final report generated:", output);
 }

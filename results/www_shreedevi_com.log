@@ -1,0 +1,69 @@
+◇ injected env (3) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Initializing Asset Discovery...
+[INFO] Scan ID: www_shreedevi_com
+[INFO] Target: www.shreedevi.com
+[INFO] Output: results/www_shreedevi_com
+[INFO] Starting subdomain discovery...
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine -d www.shreedevi.com -silent
+[WARN] Primary discovery module returned no data
+[INFO] Expanding discovery reach...
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine --subs-only www.shreedevi.com
+[INFO] Secondary module found: 1
+[INFO] Consolidated unique assets: 1
+[INFO] Verifying live endpoints...
+[CMD] Running specialized module: engine -l results/www_shreedevi_com/subs_to_check.txt -ip -silent
+[INFO] Assets → subs=1, ips=1, urls=1
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine www.shreedevi.com A +short
+[CMD] Running specialized module: engine www.shreedevi.com AAAA +short
+[WARN] Module failed for AAAA
+[CMD] Running specialized module: engine www.shreedevi.com MX +short
+[CMD] Running specialized module: engine www.shreedevi.com TXT +short
+[CMD] Running specialized module: engine www.shreedevi.com CNAME +short
+[WARN] Module failed for CNAME
+[CMD] Running specialized module: engine www.shreedevi.com NS +short
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine www.shreedevi.com
+[ERROR] WHOIS command failed for www.shreedevi.com: Command failed: whois www.shreedevi.com
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: echo | engine s_client -connect www.shreedevi.com:443 -servername www.shreedevi.com 2>/dev/null | engine x509 -noout -issuer -subject -dates
+[INFO] Recon completed successfully
+[PIPELINE] Asset Discovery completed
+
+[PIPELINE] Initiating Security Analysis...
+[VULN] Analyzing service exposures on www.shreedevi.com...
+[CMD] Running specialized module: engine -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21-23,25,53,80,81,88,110,111,135,139,143,443,445,548,587,631,636,873,990,993,995,1025-1029,1110,1433,1723,2000,2049,2121,3000,3128,3306,3389,3986,4848,5000,5060,5432,5666,5800,5900,6000,6001,6646,7070,8000,8008,8009,8080,8081,8443,8888,9000,9100,9999 www.shreedevi.com -oN results/www_shreedevi_com/engine.txt
+[VULN] Security engine processing 1 targets...
+[CMD] Running specialized module: engine -l results/www_shreedevi_com/urls.txt -t /home/kali/engine-templates/http/cves -t /home/kali/engine-templates/http/vulnerabilities -t /home/kali/engine-templates/http/exposures -t /home/kali/engine-templates/http/misconfiguration -t /home/kali/engine-templates/http/technologies -t /home/kali/engine-templates/http/exposed-panels -c 100 -bs 25 -rl 300 -mhe 50 -ss host-spray -duc -timeout 5 -retries 0 -jle results/www_shreedevi_com/engine.jsonl 2>&1
+[VULN] Analyzing web headers and configurations...
+[CMD] Running specialized module: engine -h https://www.shreedevi.com -Tuning 123 -nointeractive
+[VULN] Web analysis finished for https://www.shreedevi.com
+[VULN] Service analysis completed for www.shreedevi.com
+[VULN] Analysis finished
+[CMD] Running specialized module: searchsploit --cve CVE-2011-0966
+[CMD] Running specialized module: searchsploit --cve CVE-2019-1653
+✅ Scan Completed
+[PIPELINE] Security Analysis completed
+
+[PIPELINE] Running Threat Intelligence Analysis...
+[THREAT] Starting threat intel for domain=www.shreedevi.com, ips=1, urls=1
+[THREAT] Querying intelligence databases for www.shreedevi.com...
+[THREAT] Intel results: detections=0, pulses=0
+[THREAT] Performing historical record search for www.shreedevi.com...
+[THREAT] Search results: records=0, supply_chain=0
+[THREAT] IP enrichment for 13.248.169.48...
+[THREAT] Shodan 13.248.169.48: ports=80,443, vulns=0
+[THREAT] URL enrichment for https://www.shreedevi.com...
+[THREAT] Complete. Risk=MEDIUM (35), MITRE=0, Supply=11
+[PIPELINE] Threat Intelligence Analysis completed
+
+[PIPELINE] ✅ Final report generated: results/www_shreedevi_com/unified_report.json

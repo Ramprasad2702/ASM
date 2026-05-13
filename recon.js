@@ -36,7 +36,11 @@ const log = {
   info: (msg) => console.log(`[INFO] ${msg}`),
   warn: (msg) => console.warn(`[WARN] ${msg}`),
   error: (msg) => console.error(`[ERROR] ${msg}`),
-  cmd: (msg) => console.log(`[CMD] ${msg}`)
+  cmd: (msg) => {
+    // Redact tool names from command log for anonymity
+    const redacted = msg.replace(/(subfinder|assetfinder|httpx-toolkit|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
+    console.log(`[CMD] Running specialized module: ${redacted}`);
+  }
 };
 
 // ================= ERROR WRITER =================
@@ -92,10 +96,10 @@ function runCmd(cmd, timeout = 30000) {
 function checkTool(tool) {
   const res = runCmd(`which ${tool}`);
   if (!res || res.error) {
-    log.error(`${tool} is not installed`);
+    log.error(`Required module is missing`);
     return false;
   }
-  log.info(`${tool} found`);
+  log.info(`Module validated`);
   return true;
 }
 
@@ -150,21 +154,40 @@ async function httpLiveness(domain) {
   return urls;
 }
 
-// ================= SUBFINDER =================
-function subfinder(domain) {
-  log.info("Running subfinder...");
+// ================= PRIMARY DISCOVERY =================
+function primaryDiscovery(domain) {
+  log.info("Starting subdomain discovery...");
 
   if (!checkTool("subfinder")) return [];
 
   const out = runCmd(`subfinder -d ${domain} -silent`, SUBFINDER_TIMEOUT);
 
   if (!out || out.error) {
-    log.warn("Subfinder failed or returned no data");
+    log.warn("Primary discovery module returned no data");
     return [];
   }
 
   const subs = [...new Set(out.split("\n").map(s => s.trim()).filter(Boolean))];
-  log.info(`Subdomains found: ${subs.length}`);
+  log.info(`Discovery module found: ${subs.length}`);
+
+  return subs;
+}
+
+// ================= SECONDARY DISCOVERY =================
+function secondaryDiscovery(domain) {
+  log.info("Expanding discovery reach...");
+
+  if (!checkTool("assetfinder")) return [];
+
+  const out = runCmd(`assetfinder --subs-only ${domain}`, 30000);
+
+  if (!out || out.error) {
+    log.warn("Secondary discovery returned no data");
+    return [];
+  }
+
+  const subs = [...new Set(out.split("\n").map(s => s.trim()).filter(Boolean))];
+  log.info(`Secondary module found: ${subs.length}`);
 
   return subs;
 }
@@ -180,8 +203,8 @@ function digRecords(domain) {
     const out = runCmd(`dig ${domain} ${type} +short`);
 
     if (!out || out.error) {
-      log.warn(`dig failed for ${type}`);
-      records[type] = [];
+      log.warn(`Module failed for ${type}`);
+      continue;
     } else {
       records[type] = out.split("\n");
     }
@@ -205,6 +228,7 @@ async function whoisLookup(domain) {
   const out = runCmd(`whois ${domain}`);
 
   if (!out || out.error) {
+    log.error(`WHOIS command failed for ${domain}: ${out ? out.message : "No output"}`);
     return { error: "whois_failed" };
   }
 
@@ -235,7 +259,7 @@ async function main() {
       throw new Error("Usage: node recon.js <domain>");
     }
 
-    const domain = extractDomain(input);
+    const domain = extractDomain(input).trim();
 
     const scanId = process.env.SCAN_ID || domain.replace(/[^a-z0-9]/gi, "_");
     const outDir = process.env.OUTPUT_DIR || path.join("results", scanId);
@@ -249,21 +273,27 @@ async function main() {
     updateState(outDir, "recon_init", 5, "Initializing Recon...");
 
     // ===== SUBDOMAIN ENUM =====
-    updateState(outDir, "subdomain_discovery", 10, "Discovering subdomains...");
-    let subs = subfinder(domain);
+    updateState(outDir, "subdomain_discovery", 10, "Mapping subdomains...");
+    
+    const subfinderResults = primaryDiscovery(domain);
+    const assetfinderResults = secondaryDiscovery(domain);
+    
+    let subs = [...new Set([...subfinderResults, ...assetfinderResults])];
 
     if (!subs.length) {
-      log.warn("Fallback to root domain");
+      log.warn("Reverting to root domain mapping");
       subs = [domain];
+    } else {
+      log.info(`Consolidated unique assets: ${subs.length}`);
     }
 
     // ===== ASSET DISCOVERY WITH HTTPX =====
-    updateState(outDir, "asset_discovery", 12, "Checking asset liveness...");
+    updateState(outDir, "asset_discovery", 12, "Verifying asset availability...");
 
     const subsFile = path.join(outDir, "subs_to_check.txt");
     fs.writeFileSync(subsFile, subs.join("\n"));
 
-    log.info("Running httpx-toolkit for liveness check...");
+    log.info("Verifying live endpoints...");
     // -ip flag gets the IP, -silent for clean output
     const httpxOut = runCmd(`httpx-toolkit -l ${subsFile} -ip -silent`, 120000);
 
@@ -289,7 +319,7 @@ async function main() {
         if (ip) assets.ips.push(ip);
       }
     } else {
-      log.warn("httpx-toolkit failed, falling back to basic resolution");
+      log.warn("Asset verification failed, falling back to basic resolution");
       // Basic fallback
       for (let sub of subs) {
         const ip = await resolveDomain(sub);

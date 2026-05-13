@@ -9,7 +9,7 @@ const axios = require("axios");
 const FINAL_REPORT = "final_report.json";
 const STATE_FILE = "scan_state.json";
 
-const IMPORTANT_PORTS = "21,22,25,53,80,110,143,443,445,3306,3389,8080,8443";
+const IMPORTANT_PORTS = "21-23,25,53,80,81,88,110,111,135,139,143,443,445,548,587,631,636,873,990,993,995,1025-1029,1110,1433,1723,2000,2049,2121,3000,3128,3306,3389,3986,4848,5000,5060,5432,5666,5800,5900,6000,6001,6646,7070,8000,8008,8009,8080,8081,8443,8888,9000,9100,9999";
 
 const NUCLEI_TEMPLATES = [
   "http/cves",
@@ -38,7 +38,8 @@ function updateState(dir, stage, progress, message) {
 
 function runCmd(cmd, timeout = 600000) { // Default 10 mins
   return new Promise((resolve) => {
-    console.log(`[CMD] ${cmd}`);
+    const redacted = cmd.replace(/(subfinder|assetfinder|httpx-toolkit|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
+    console.log(`[CMD] Running specialized module: ${redacted}`);
     // Use detached: true so we can kill the process group on timeout
     const p = spawn(cmd, { shell: true, detached: true });
 
@@ -78,21 +79,21 @@ function initReport(dir, domain) {
   });
 }
 
-// ================= NMAP =================
-async function runNmap(domain, dir) {
-  updateState(dir, "nmap", 20, "Nmap started");
+// ================= INFRASTRUCTURE ANALYSIS =================
+async function runInfrastructureAnalysis(domain, dir) {
+  updateState(dir, "infrastructure_scan", 20, "Initiating infrastructure analysis...");
 
-  console.log(`[VULN] Nmap started on ${domain} (Aggressive mode)...`);
+  console.log(`[VULN] Analyzing service exposures on ${domain}...`);
   await runCmd(
     `nmap -sT -T4 --min-rate 500 -sV -sC --script vuln -p ${IMPORTANT_PORTS} ${domain} -oN ${dir}/nmap.txt`,
     1200000 // 20 min timeout for nmap
   );
-  console.log(`[VULN] Nmap finished for ${domain}`);
+  console.log(`[VULN] Service analysis completed for ${domain}`);
 
-  updateState(dir, "nmap_done", 40, "Nmap completed");
+  updateState(dir, "infrastructure_done", 40, "Infrastructure analysis complete");
 }
 
-function parseNmap(dir, cves) {
+function parseInfrastructureResults(dir, cves) {
   const file = path.join(dir, "nmap.txt");
   if (!fs.existsSync(file)) return [];
 
@@ -152,7 +153,7 @@ function mapToOwasp(name, description = "", tags = []) {
 }
 
 // ================= NMAP FINDINGS =================
-function extractNmapFindings(services, cves) {
+function extractInfrastructureFindings(services, cves) {
   const findings = [];
 
   for (let s of services) {
@@ -160,7 +161,7 @@ function extractNmapFindings(services, cves) {
     if (s.state === "open") {
       if (s.service === "ssh") {
         findings.push({
-          source: "nmap",
+          source: "Infrastructure",
           name: "SSH Service Exposed",
           severity: "medium",
           port: s.port,
@@ -170,7 +171,7 @@ function extractNmapFindings(services, cves) {
 
       if (s.service.includes("http")) {
         findings.push({
-          source: "nmap",
+          source: "Infrastructure",
           name: "Web Service Detected",
           severity: "low",
           port: s.port,
@@ -205,7 +206,7 @@ function extractNmapFindings(services, cves) {
   if (cves) {
     cves.forEach(cve => {
       findings.push({
-        source: "nmap",
+        source: "Infrastructure",
         name: `Vulnerability Found: ${cve}`,
         severity: "high",
         port: "N/A",
@@ -228,7 +229,7 @@ function processScript(name, lines, findings, port) {
     const users = content.match(/Username found: (\S+)/g);
     if (users) {
       findings.push({
-        source: "nmap",
+        source: "Infrastructure",
         name: "WordPress User Enumeration",
         description: `Found ${users.length} users: ${users.map(u => u.split(": ")[1]).join(", ")}`,
         severity: "medium",
@@ -239,7 +240,7 @@ function processScript(name, lines, findings, port) {
   } else if (name.includes("http-aspnet-debug")) {
     if (content.includes("DEBUG is enabled")) {
       findings.push({
-        source: "nmap",
+        source: "Infrastructure",
         name: "ASP.NET Debug Enabled",
         description: "Remote debugging is enabled, which may leak sensitive information.",
         severity: "high",
@@ -251,7 +252,7 @@ function processScript(name, lines, findings, port) {
     const forms = content.match(/Path: (\S+)/g);
     if (forms) {
       findings.push({
-        source: "nmap",
+        source: "Infrastructure",
         name: "Possible CSRF Vulnerability",
         description: `Found ${forms.length} forms without CSRF protection. Paths: ${forms.map(f => f.split(": ")[1]).slice(0, 3).join(", ")}...`,
         severity: "medium",
@@ -263,7 +264,7 @@ function processScript(name, lines, findings, port) {
     const entries = lines.filter(l => l.includes("/") && !l.includes("version")).length;
     if (entries > 0) {
       findings.push({
-        source: "nmap",
+        source: "Infrastructure",
         name: "Interesting Files/Directories Found",
         description: `Nmap enumeration discovered ${entries} potentially sensitive paths (e.g., /wp-login.php, /robots.txt).`,
         severity: "medium",
@@ -275,8 +276,8 @@ function processScript(name, lines, findings, port) {
     // Generic script finding for anything else that looks like a vulnerability
     if (content.toLowerCase().includes("vulnerable") || content.toLowerCase().includes("vulnerability") || content.toLowerCase().includes("exploitable")) {
       findings.push({
-        source: "nmap",
-        name: `Nmap Script Finding: ${name}`,
+        source: "Infrastructure",
+        name: `Dynamic Analysis Finding: ${name}`,
         description: content.substring(0, 200).replace(/[|_ ]+/g, " ").trim(),
         severity: "high",
         port: port,
@@ -286,36 +287,31 @@ function processScript(name, lines, findings, port) {
   }
 }
 
-// ================= NUCLEI =================
-async function runNuclei(urls, dir) {
-  updateState(dir, "nuclei", 50, "Nuclei started");
+// ================= SECURITY ENGINE =================
+async function runEngine(urls, dir) {
+  updateState(dir, "security_scan", 50, "Executing deep security engine...");
 
-  // Ensure all URLs have a scheme so Nuclei can scan them
   const normalizedUrls = urls.map(u => u.startsWith("http") ? u : `https://${u}`);
   const file = path.join(dir, "urls.txt");
   fs.writeFileSync(file, normalizedUrls.join("\n"));
 
-  // Use absolute path — ~ may not expand inside spawn correctly on all systems
   const templatesDir = (process.env.HOME || "/root") + "/nuclei-templates";
   const templateArgs = NUCLEI_TEMPLATES.map(t => `-t ${templatesDir}/${t}`).join(" ");
 
-  // Nuclei v3 flags:
-  //   -nut  = no-update-templates  (NOT -no-update-templates, which is INVALID in v3)
-  //   -duc  = disable-update-check (NOT -no-update-check)
-  //   -ss host-spray = scan each host with all templates before moving to next
-  //   -jle  = jsonl export (valid in v3)
+  // Analysis engine flags:
+  //   -ss host-spray = scan each host with all modules before moving to next
+  //   -jle  = jsonl export
   //   -etags info = also include informational findings (technologies, etc.)
-  console.log(`[VULN] Nuclei started on ${normalizedUrls.length} targets (Concurrency: 50)...`);
+  console.log(`[VULN] Security engine processing ${normalizedUrls.length} targets...`);
   const result = await runCmd(
-    `nuclei -l ${file} ${templateArgs} -c 50 -rl 150 -mhe 30 -ss host-spray -duc -timeout 5 -retries 0 -jle ${dir}/nuclei.jsonl 2>&1`,
+    `nuclei -l ${file} ${templateArgs} -c 100 -bs 25 -rl 300 -mhe 50 -ss host-spray -duc -timeout 5 -retries 0 -jle ${dir}/nuclei.jsonl 2>&1`,
     2400000
   );
-  // Log the first 500 chars of nuclei stderr/stdout for debugging
+  // Log the first 500 chars of output for debugging
   const preview = result.output.substring(0, 500).replace(/\n/g, " ");
-  console.log(`[VULN] Nuclei output preview: ${preview}`);
-  console.log(`[VULN] Nuclei finished`);
+  console.log(`[VULN] Analysis finished`);
 
-  updateState(dir, "nuclei_done", 70, "Nuclei completed");
+  updateState(dir, "security_done", 70, "Security engine analysis complete");
 }
 
 function normalizeSeverity(sev) {
@@ -324,7 +320,7 @@ function normalizeSeverity(sev) {
   return sev;
 }
 
-function parseNuclei(dir, cves) {
+function parseEngineResults(dir, cves) {
   const file = path.join(dir, "nuclei.jsonl");
   if (!fs.existsSync(file)) return [];
 
@@ -339,7 +335,7 @@ function parseNuclei(dir, cves) {
       const cveMatch = j.info?.name?.match(/CVE-\d{4}-\d+/) || (j.info?.reference || []).join(" ").match(/CVE-\d{4}-\d+/);
 
       findings.push({
-        source: "nuclei",
+        source: "Security Engine",
         name: j.info?.name,
         severity: normalizeSeverity(j.info?.severity || "low"),
         url: j["matched-at"],
@@ -360,25 +356,25 @@ function parseNuclei(dir, cves) {
   return findings;
 }
 
-// ================= NIKTO =================
-async function runNikto(urls, dir) {
-  updateState(dir, "nikto", 75, "Nikto started");
+// ================= WEB ANALYSIS =================
+async function runWebAnalysis(urls, dir) {
+  updateState(dir, "web_analysis", 75, "Performing web layer analysis...");
 
   const findings = [];
   const CONCURRENCY = 2; // Limited concurrency for Nikto to avoid "cracking" the site
   
   for (let i = 0; i < urls.length; i += CONCURRENCY) {
     const chunk = urls.slice(i, i + CONCURRENCY);
-    console.log(`[VULN] Nikto batch started for ${chunk.join(", ")}...`);
+    console.log(`[VULN] Analyzing web headers and configurations...`);
     
     await Promise.all(chunk.map(async (url) => {
       const res = await runCmd(`nikto -h ${url} -Tuning 123 -nointeractive`, 900000); // 15 min timeout, skip heavy tests
       
       const lines = res.output.split("\n");
       lines.forEach(line => {
-        if (line.startsWith("+ ") && !line.match(/^\+ (Target|Server:|Multiple IPs|No CGI|Start Time:|End Time:|Scan terminated|1 host\(s\)|Your Nikto|Platform:|Nikto v)/)) {
+        if (line.startsWith("+ ") && !line.match(/^\+ (Target|Server:|Multiple IPs|No CGI|Start Time:|End Time:|Scan terminated|1 host\(s\)|Your Analysis|Platform:|Scanner v)/)) {
           findings.push({
-            source: "nikto",
+            source: "Web Analysis",
             name: line.substring(2, 50).trim() + "...",
             description: line.substring(2).trim(),
             severity: "medium",
@@ -387,11 +383,11 @@ async function runNikto(urls, dir) {
           });
         }
       });
-      console.log(`[VULN] Nikto finished for ${url}`);
+      console.log(`[VULN] Web analysis finished for ${url}`);
     }));
   }
 
-  updateState(dir, "nikto_done", 85, "Nikto completed");
+  updateState(dir, "web_analysis_done", 85, "Web layer analysis complete");
   return findings;
 }
 
@@ -465,36 +461,34 @@ async function main() {
   // CONCURRENT EXECUTION to maximize speed
   const cves = new Set();
 
-  const [_, __, niktoFindings] = await Promise.all([
-    runNmap(domain, dir),
-    runNuclei(urls, dir),
-    runNikto(urls, dir)
+  const [_, __, webFindings] = await Promise.all([
+    runInfrastructureAnalysis(domain, dir),
+    runEngine(urls, dir),
+    runWebAnalysis(urls, dir)
   ]);
 
-  const nmapServices = parseNmap(dir, cves);
-  const nmapFindings = extractNmapFindings(nmapServices, cves);
-  const nucleiFindings = parseNuclei(dir, cves);
+  const services = parseInfrastructureResults(dir, cves);
+  const infraFindings = extractInfrastructureFindings(services, cves);
+  const engineFindings = parseEngineResults(dir, cves);
+
+  const allFindings = [
+    ...infraFindings,
+    ...engineFindings,
+    ...webFindings
+  ];
 
   const [exploitdb, geo] = await Promise.all([
     exploitdbLookup(cves),
     geoLookup(ips)
   ]);
 
-  const allFindings = [
-    ...nmapFindings,
-    ...nucleiFindings,
-    ...niktoFindings
-  ];
-
-  const risk = calculateRisk(allFindings);
-
   const report = {
     status: "completed",
     domain,
     findings: allFindings,
-    risk,
+    risk: calculateRisk(allFindings),
     attack_surface: {
-      services: nmapServices, // Contains port, service, version
+      services: services, // Contains port, service, version
       urls: urls.length
     },
     geo,
