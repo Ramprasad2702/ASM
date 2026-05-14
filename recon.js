@@ -38,7 +38,7 @@ const log = {
   error: (msg) => console.error(`[ERROR] ${msg}`),
   cmd: (msg) => {
     // Redact tool names from command log for anonymity
-    const redacted = msg.replace(/(subfinder|assetfinder|httpx-toolkit|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
+    const redacted = msg.replace(/(subfinder|assetfinder|amass|httpx-toolkit|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
     console.log(`[CMD] Running specialized module: ${redacted}`);
   }
 };
@@ -110,6 +110,17 @@ function extractDomain(input) {
     return url.hostname;
   } catch {
     return input;
+  }
+}
+
+async function reverseDns(ip) {
+  try {
+    const hostnames = await dns.reverse(ip);
+    log.info(`Reverse DNS resolved ${ip} to ${hostnames[0]}`);
+    return hostnames[0];
+  } catch (err) {
+    log.warn(`Reverse DNS failed for ${ip}: ${err.message}`);
+    return null;
   }
 }
 
@@ -256,12 +267,25 @@ async function main() {
     const input = process.argv[2];
 
     if (!input) {
-      throw new Error("Usage: node recon.js <domain>");
+      throw new Error("Usage: node recon.js <target>");
     }
 
-    const domain = extractDomain(input).trim();
+    let domain = extractDomain(input).trim();
+    let isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(domain);
 
-    const scanId = process.env.SCAN_ID || domain.replace(/[^a-z0-9]/gi, "_");
+    if (isIP) {
+      log.info(`Target is an IP (${domain}), attempting reverse DNS...`);
+      const resolved = await reverseDns(domain);
+      if (resolved) {
+        log.info(`Proceeding with resolved domain: ${resolved}`);
+        domain = resolved;
+        isIP = false; // It's a domain now
+      } else {
+        log.warn(`Could not resolve domain for ${domain}, proceeding with IP only.`);
+      }
+    }
+
+    const scanId = process.env.SCAN_ID || input.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
     const outDir = process.env.OUTPUT_DIR || path.join("results", scanId);
 
     fs.mkdirSync(outDir, { recursive: true });
@@ -272,19 +296,22 @@ async function main() {
 
     updateState(outDir, "recon_init", 5, "Initializing Recon...");
 
-    // ===== SUBDOMAIN ENUM =====
-    updateState(outDir, "subdomain_discovery", 10, "Mapping subdomains...");
-    
-    const subfinderResults = primaryDiscovery(domain);
-    const assetfinderResults = secondaryDiscovery(domain);
-    
-    let subs = [...new Set([...subfinderResults, ...assetfinderResults])];
-
-    if (!subs.length) {
-      log.warn("Reverting to root domain mapping");
+    let subs = [];
+    if (isIP) {
+      log.info("Target is an IP, skipping subdomain discovery");
       subs = [domain];
     } else {
-      log.info(`Consolidated unique assets: ${subs.length}`);
+      updateState(outDir, "subdomain_discovery", 10, "Mapping subdomains...");
+      const subfinderResults = primaryDiscovery(domain);
+      const assetfinderResults = secondaryDiscovery(domain);
+      subs = [...new Set([...subfinderResults, ...assetfinderResults])];
+
+      if (!subs.length) {
+        log.warn("Reverting to root domain mapping");
+        subs = [domain];
+      } else {
+        log.info(`Consolidated unique assets: ${subs.length}`);
+      }
     }
 
     // ===== ASSET DISCOVERY WITH HTTPX =====
@@ -322,13 +349,18 @@ async function main() {
       log.warn("Asset verification failed, falling back to basic resolution");
       // Basic fallback
       for (let sub of subs) {
-        const ip = await resolveDomain(sub);
+        const ip = isIP ? sub : await resolveDomain(sub);
         if (ip) {
           assets.subdomains.push(sub);
           assets.ips.push(ip);
           assets.urls.push(`http://${sub}`, `https://${sub}`);
         }
       }
+    }
+
+    // Add original input if it's a URL (prepend to ensure it's scanned)
+    if (input.startsWith("http")) {
+      assets.urls.unshift(input);
     }
 
     // remove duplicates

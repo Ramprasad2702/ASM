@@ -1,0 +1,566 @@
+{
+    "target": "http://localhost:3000/test",
+    "recon": {
+        "__meta__": {
+            "scan_id": "http_localhost_3000_test",
+            "status": "completed",
+            "timestamp": "2026-05-14T05:52:03.341Z"
+        },
+        "domain": "localhost",
+        "dns": {},
+        "whois": {
+            "error": "whois_failed"
+        },
+        "tls": "tls_failed",
+        "assets": {
+            "subdomains": [],
+            "ips": [],
+            "urls": [
+                "http://localhost:3000/test"
+            ]
+        }
+    },
+    "recon_summary": {
+        "ips": 0,
+        "urls": 1,
+        "urls_list": [
+            "http://localhost:3000/test"
+        ]
+    },
+    "vulnerability": {
+        "status": "completed",
+        "domain": "localhost",
+        "findings": [
+            {
+                "source": "Infrastructure",
+                "name": "SSH Service Exposed",
+                "severity": "medium",
+                "port": "22/tcp",
+                "owasp": null
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Web Service Detected",
+                "severity": "low",
+                "port": "80/tcp",
+                "owasp": null
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Dynamic Analysis Finding: mysql_native_password",
+                "description": "mysql native password\n ssl-dh-params:\n VULNERABLE:\n Anonymous Diffie-Hellman Key Exchange MitM Vulnerability\n State: VULNERABLE\n Transport Layer Security (TLS) services that u",
+                "severity": "high",
+                "port": "3306/tcp",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-35414",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-35414",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-35386",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-35386",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-35385",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-35385",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-35387",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-35387",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-35388",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-35388",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-28780",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-28780",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-24072",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-24072",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-23918",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-23918",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-34059",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-34059",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-29169",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-29169",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-29168",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-29168",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-33523",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-33523",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-34032",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-34032",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-33857",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-33857",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-33007",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-33007",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Infrastructure",
+                "name": "Vulnerability Found: CVE-2026-33006",
+                "severity": "high",
+                "port": "N/A",
+                "link": "https://nvd.nist.gov/vuln/detail/CVE-2026-33006",
+                "owasp": "A06:2021-Vulnerable and Outdated Components"
+            },
+            {
+                "source": "Web Analysis",
+                "name": "[FAIL] Unable to connect to localhost:3000....",
+                "description": "[FAIL] Unable to connect to localhost:3000.",
+                "severity": "medium",
+                "url": "http://localhost:3000/test",
+                "owasp": null
+            }
+        ],
+        "risk": {
+            "score": 100,
+            "level": "HIGH"
+        },
+        "attack_surface": {
+            "services": [
+                {
+                    "port": "22/tcp",
+                    "state": "open",
+                    "service": "ssh",
+                    "version": "OpenSSH 10.2p1 Debian 6 (protocol 2.0)",
+                    "scripts": [
+                        "| vulners:",
+                        "|   cpe:/a:openbsd:openssh:10.2p1:",
+                        "|     \tCVE-2026-35414\t8.1\thttps://vulners.com/cve/CVE-2026-35414",
+                        "|     \tCVE-2026-35386\t8.1\thttps://vulners.com/cve/CVE-2026-35386",
+                        "|     \tCVE-2026-35385\t8.1\thttps://vulners.com/cve/CVE-2026-35385",
+                        "|     \tCVE-2026-35387\t6.5\thttps://vulners.com/cve/CVE-2026-35387",
+                        "|_    \tCVE-2026-35388\t2.5\thttps://vulners.com/cve/CVE-2026-35388"
+                    ]
+                },
+                {
+                    "port": "80/tcp",
+                    "state": "open",
+                    "service": "http",
+                    "version": "Apache httpd 2.4.66 ((Debian))",
+                    "scripts": [
+                        "|_http-dombased-xss: Couldn't find any DOM based XSS.",
+                        "|_http-csrf: Couldn't find any CSRF vulnerabilities.",
+                        "|_http-server-header: Apache/2.4.66 (Debian)",
+                        "|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.",
+                        "| vulners:",
+                        "|   cpe:/a:apache:http_server:2.4.66:",
+                        "|     \tCVE-2026-28780\t9.8\thttps://vulners.com/cve/CVE-2026-28780",
+                        "|     \tFF8046F6-59B1-5FBB-9F70-8FC3D6F2EF66\t8.8\thttps://vulners.com/githubexploit/FF8046F6-59B1-5FBB-9F70-8FC3D6F2EF66\t*EXPLOIT*",
+                        "|     \tE3046672-76E0-5D11-991F-756A01B3E0EC\t8.8\thttps://vulners.com/githubexploit/E3046672-76E0-5D11-991F-756A01B3E0EC\t*EXPLOIT*",
+                        "|     \tCVE-2026-24072\t8.8\thttps://vulners.com/cve/CVE-2026-24072",
+                        "|     \tCVE-2026-23918\t8.8\thttps://vulners.com/cve/CVE-2026-23918",
+                        "|     \tBA8A46A4-71BC-5D43-B3FC-D50C9ADB0348\t8.8\thttps://vulners.com/githubexploit/BA8A46A4-71BC-5D43-B3FC-D50C9ADB0348\t*EXPLOIT*",
+                        "|     \tAEE4B3AA-4C98-5A59-B89E-B854736F36DA\t8.8\thttps://vulners.com/githubexploit/AEE4B3AA-4C98-5A59-B89E-B854736F36DA\t*EXPLOIT*",
+                        "|     \tA0490CD5-A987-5168-91C3-E9E9264A02DF\t8.8\thttps://vulners.com/githubexploit/A0490CD5-A987-5168-91C3-E9E9264A02DF\t*EXPLOIT*",
+                        "|     \t92FEC48F-49A0-52E6-916C-4B94BEE6A1BC\t8.8\thttps://vulners.com/githubexploit/92FEC48F-49A0-52E6-916C-4B94BEE6A1BC\t*EXPLOIT*",
+                        "|     \t8A69D3F8-27C0-508D-B54A-79182141AB36\t8.8\thttps://vulners.com/githubexploit/8A69D3F8-27C0-508D-B54A-79182141AB36\t*EXPLOIT*",
+                        "|     \t6FDDDAD4-29D6-53E5-A3C9-C44014C0F5E7\t8.8\thttps://vulners.com/githubexploit/6FDDDAD4-29D6-53E5-A3C9-C44014C0F5E7\t*EXPLOIT*",
+                        "|     \t6E9B0B31-6FD4-5E8C-9907-69DF0B4465A1\t8.8\thttps://vulners.com/githubexploit/6E9B0B31-6FD4-5E8C-9907-69DF0B4465A1\t*EXPLOIT*",
+                        "|     \t69A523A2-6161-52D7-819A-B1A5C90B6BBE\t8.8\thttps://vulners.com/githubexploit/69A523A2-6161-52D7-819A-B1A5C90B6BBE\t*EXPLOIT*",
+                        "|     \t40379BCA-07F4-5401-B618-4640793D350D\t8.8\thttps://vulners.com/githubexploit/40379BCA-07F4-5401-B618-4640793D350D\t*EXPLOIT*",
+                        "|     \t356D4D43-355E-5645-9153-794D0EB4C307\t8.8\thttps://vulners.com/githubexploit/356D4D43-355E-5645-9153-794D0EB4C307\t*EXPLOIT*",
+                        "|     \tCVE-2026-34059\t7.5\thttps://vulners.com/cve/CVE-2026-34059",
+                        "|     \tCVE-2026-29169\t7.5\thttps://vulners.com/cve/CVE-2026-29169",
+                        "|     \tCVE-2026-29168\t7.3\thttps://vulners.com/cve/CVE-2026-29168",
+                        "|     \tCVE-2026-33523\t6.5\thttps://vulners.com/cve/CVE-2026-33523",
+                        "|     \tCVE-2026-34032\t5.3\thttps://vulners.com/cve/CVE-2026-34032",
+                        "|     \tCVE-2026-33857\t5.3\thttps://vulners.com/cve/CVE-2026-33857",
+                        "|     \tCVE-2026-33007\t5.3\thttps://vulners.com/cve/CVE-2026-33007",
+                        "|     \tEA6ADD14-D80B-5DC2-9991-1F9663E2D09F\t4.8\thttps://vulners.com/githubexploit/EA6ADD14-D80B-5DC2-9991-1F9663E2D09F\t*EXPLOIT*",
+                        "|_    \tCVE-2026-33006\t4.8\thttps://vulners.com/cve/CVE-2026-33006",
+                        "| http-enum:",
+                        "|_  /server-status/: Potentially interesting folder"
+                    ]
+                },
+                {
+                    "port": "3306/tcp",
+                    "state": "open",
+                    "service": "mysql?",
+                    "version": "",
+                    "scripts": [
+                        "| fingerprint-strings:",
+                        "|   GenericLines:",
+                        "|     11.8.6-MariaDB-5 from Debian",
+                        "|     VB(@I.Ie",
+                        "|     C[$<D~q;qHUQ",
+                        "|     mysql_native_password",
+                        "|     #HY000Proxy header is not accepted from 127.0.0.1",
+                        "|   LDAPBindReq:",
+                        "|     11.8.6-MariaDB-5 from Debian",
+                        "|     vN^p8fvB",
+                        "|     $,R6W4=sLd2k",
+                        "|     mysql_native_password",
+                        "|   NULL:",
+                        "|     11.8.6-MariaDB-5 from Debian",
+                        "|     VB(@I.Ie",
+                        "|     C[$<D~q;qHUQ",
+                        "|     mysql_native_password",
+                        "|   afp:",
+                        "|     11.8.6-MariaDB-5 from Debian",
+                        "|     8%L4[P`",
+                        "|     L>/pi>9B}p=z",
+                        "|_    mysql_native_password",
+                        "| ssl-dh-params:",
+                        "|   VULNERABLE:",
+                        "|   Anonymous Diffie-Hellman Key Exchange MitM Vulnerability",
+                        "|     State: VULNERABLE",
+                        "|       Transport Layer Security (TLS) services that use anonymous",
+                        "|       Diffie-Hellman key exchange only provide protection against passive",
+                        "|       eavesdropping, and are vulnerable to active man-in-the-middle attacks",
+                        "|       which could completely compromise the confidentiality and integrity",
+                        "|       of any data exchanged over the resulting session.",
+                        "|     Check results:",
+                        "|       ANONYMOUS DH GROUP 1",
+                        "|             Cipher Suite: TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256",
+                        "|             Modulus Type: Safe prime",
+                        "|             Modulus Source: Unknown/Custom-generated",
+                        "|             Modulus Length: 2048",
+                        "|             Generator Length: 8",
+                        "|             Public Key Length: 2048",
+                        "|     References:",
+                        "|_      https://www.ietf.org/rfc/rfc2246.txt"
+                    ]
+                }
+            ],
+            "urls": 1
+        },
+        "geo": {},
+        "exploitdb": {
+            "CVE-2026-35414": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-35386": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-35385": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-35387": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-35388": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-28780": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-24072": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-23918": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-34059": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-29169": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-29168": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-33523": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-34032": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-33857": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-33007": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            },
+            "CVE-2026-33006": {
+                "exploitable": false,
+                "severity": "medium",
+                "raw": [
+                    "Exploits: No Results",
+                    "Shellcodes: No Results",
+                    "Papers: No Results",
+                    ""
+                ]
+            }
+        }
+    },
+    "threat_intel": {
+        "input": "http://localhost:3000/test",
+        "normalized": {
+            "ip": null,
+            "domain": "localhost",
+            "url": "http://localhost:3000/test"
+        },
+        "basic_intel": {
+            "otx_domain": {
+                "pulses": [],
+                "threat_pulses": [],
+                "pulse_count": 0
+            },
+            "virustotal_domain": {
+                "malicious": 0,
+                "detections": [],
+                "mitre_mapping": [],
+                "metadata": {}
+            },
+            "urls_checked": 1,
+            "ips_checked": 0
+        },
+        "passive_intel": {
+            "passive_dns": [],
+            "urlscan_scans": [
+                {
+                    "url": "http://2likemobile.com/",
+                    "country": "SG",
+                    "server": "Apache",
+                    "ip": "194.233.78.168",
+                    "asn": "AS141995",
+                    "asnname": "CAPL-AS-AP Contabo Asia Private Limited, SG",
+                    "malicious": false,
+                    "score": 0,
+                    "tags": [],
+                    "scan_date": "2026-05-14T05:51:11.975Z"
+                },
+                {
+                    "url": "http://infinions.de/",
+                    "malicious": false,
+                    "score": 0,
+                    "tags": [],
+                    "scan_date": "2026-05-14T05:45:31.781Z"
+                },
+                {
+                    "url": "https://cletk-jaaaa-aaaah-qacua-cai.icp0.io/",
+                    "country": "US",
+                    "ip": "23.236.116.77",
+                    "asn": "AS21859",
+                    "asnname": "ZEN-ECN - Zenlayer Inc, US",
+                    "malicious": false,
+                    "score": 0,
+                    "tags": [],
+                    "scan_date": "2026-05-14T05:44:31.416Z"
+                }
+            ],
+            "shodan_summary": []
+        },
+        "advanced_intel": {
+            "urls": [
+                {
+                    "url": "http://localhost:3000/test",
+                    "virustotal": {
+                        "malicious": 0,
+                        "detections": [],
+                        "mitre_mapping": [],
+                        "metadata": {}
+                    },
+                    "urlscan": {}
+                }
+            ],
+            "supply_chain_risks": [],
+            "mitre_techniques": []
+        },
+        "ip_intel": [],
+        "correlation": {
+            "vt_detected": false,
+            "otx_pulses": 0,
+            "shodan_vulns": 0,
+            "domain_age": null
+        },
+        "risk": {
+            "score": 0,
+            "level": "LOW",
+            "reasons": []
+        },
+        "generated_at": "2026-05-14T05:55:45.221Z"
+    },
+    "final_risk": {
+        "score": 100,
+        "level": "CRITICAL",
+        "reasons": [
+            "Vulnerabilities detected"
+        ]
+    },
+    "generated_at": "2026-05-14T05:55:45.222Z"
+}

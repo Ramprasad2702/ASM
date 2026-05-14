@@ -1,0 +1,77 @@
+◇ injected env (3) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Initializing Asset Discovery...
+[INFO] Scan ID: 127.0.0.1
+[INFO] Target: 127.0.0.1
+[INFO] Output: results/127.0.0.1
+[INFO] Target is an IP, skipping subdomain discovery
+[INFO] Verifying live endpoints...
+[CMD] Running specialized module: engine -l results/127.0.0.1/subs_to_check.txt -ip -silent
+[INFO] Assets → subs=1, ips=1, urls=1
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine 127.0.0.1 A +short
+[WARN] Module failed for A
+[CMD] Running specialized module: engine 127.0.0.1 AAAA +short
+[WARN] Module failed for AAAA
+[CMD] Running specialized module: engine 127.0.0.1 MX +short
+[WARN] Module failed for MX
+[CMD] Running specialized module: engine 127.0.0.1 TXT +short
+[WARN] Module failed for TXT
+[CMD] Running specialized module: engine 127.0.0.1 CNAME +short
+[WARN] Module failed for CNAME
+[CMD] Running specialized module: engine 127.0.0.1 NS +short
+[WARN] Module failed for NS
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine 127.0.0.1
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: echo | engine s_client -connect 127.0.0.1:443 -servername 127.0.0.1 2>/dev/null | engine x509 -noout -issuer -subject -dates
+Could not find certificate from <stdin>
+[INFO] Recon completed successfully
+[PIPELINE] Asset Discovery completed
+
+[PIPELINE] Initiating Security Analysis...
+[VULN] Analyzing service exposures on 127.0.0.1...
+[CMD] Running specialized module: engine -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21-23,25,53,80,81,88,110,111,135,139,143,443,445,548,587,631,636,873,990,993,995,1025-1029,1110,1433,1723,2000,2049,2121,3000,3128,3306,3389,3986,4848,5000,5060,5432,5666,5800,5900,6000,6001,6646,7070,8000,8008,8009,8080,8081,8443,8888,9000,9100,9999 127.0.0.1 -oN results/127.0.0.1/engine.txt
+[VULN] Security engine processing 1 targets...
+[CMD] Running specialized module: engine -l results/127.0.0.1/urls.txt -t /home/kali/engine-templates/http/cves -t /home/kali/engine-templates/http/vulnerabilities -t /home/kali/engine-templates/http/exposures -t /home/kali/engine-templates/http/misconfiguration -t /home/kali/engine-templates/http/technologies -t /home/kali/engine-templates/http/exposed-panels -c 100 -bs 25 -rl 300 -mhe 50 -ss host-spray -duc -timeout 5 -retries 0 -jle results/127.0.0.1/engine.jsonl 2>&1
+[VULN] Analyzing web headers and configurations...
+[CMD] Running specialized module: engine -h http://127.0.0.1 -Tuning 123 -nointeractive
+[VULN] Service analysis completed for 127.0.0.1
+[VULN] Web analysis finished for http://127.0.0.1
+[VULN] Analysis finished
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35414
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35386
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35385
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35387
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35388
+[CMD] Running specialized module: searchsploit --cve CVE-2026-28780
+[CMD] Running specialized module: searchsploit --cve CVE-2026-24072
+[CMD] Running specialized module: searchsploit --cve CVE-2026-23918
+[CMD] Running specialized module: searchsploit --cve CVE-2026-34059
+[CMD] Running specialized module: searchsploit --cve CVE-2026-29169
+[CMD] Running specialized module: searchsploit --cve CVE-2026-29168
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33523
+[CMD] Running specialized module: searchsploit --cve CVE-2026-34032
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33857
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33007
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33006
+✅ Scan Completed
+[PIPELINE] Security Analysis completed
+
+[PIPELINE] Running Threat Intelligence Analysis...
+[THREAT] Starting threat intel for domain=127.0.0.1, ips=1, urls=1
+[THREAT] Querying intelligence databases for 127.0.0.1 (isIP: true)...
+[THREAT] Intel results: detections=0, pulses=0
+[THREAT] Performing historical record search for 127.0.0.1...
+[THREAT] Search results: records=3, supply_chain=0
+[THREAT] IP enrichment for 127.0.0.1...
+[THREAT] URL enrichment for http://127.0.0.1...
+[THREAT] URLScan submit failed for http://127.0.0.1: Request failed with status code 400
+[THREAT] Complete. Risk=LOW (0), MITRE=0, Supply=0
+[PIPELINE] Threat Intelligence Analysis completed
+
+[PIPELINE] ✅ Final report generated: results/127.0.0.1/unified_report.json

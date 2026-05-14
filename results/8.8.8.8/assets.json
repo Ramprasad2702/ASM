@@ -1,0 +1,14 @@
+{
+    "domain": "dns.google",
+    "assets": {
+        "subdomains": [
+            "dns.google"
+        ],
+        "ips": [
+            "8.8.4.4"
+        ],
+        "urls": [
+            "https://dns.google"
+        ]
+    }
+}

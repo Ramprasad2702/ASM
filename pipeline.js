@@ -25,7 +25,7 @@ async function runPipeline(target) {
   console.log("[PIPELINE] Initializing Asset Discovery...");
   await runNode("recon.js", [target]);
 
-  const safeTarget = target.replace(/[^a-z0-9]/gi, "_");
+  const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
   const dir = path.join("results", safeTarget);
   const assetsPath = path.join(dir, "assets.json");
 

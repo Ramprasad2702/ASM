@@ -30,7 +30,7 @@ app.get("/scan", (req, res) => {
     fs.mkdirSync(resultsDir, { recursive: true });
   }
 
-  const safeTarget = target.replace(/[^a-z0-9]/gi, "_");
+  const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
   const logPath = path.join(resultsDir, `${safeTarget}.log`);
   const logFd = fs.openSync(logPath, "a");
   
@@ -49,7 +49,7 @@ app.get("/assets", (req, res) => {
     return res.status(400).json({ error: "Target required" });
   }
 
-  const safeTarget = target.replace(/[^a-z0-9]/gi, "_");
+  const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
   const reconPath = path.join(__dirname, "results", safeTarget, "recon.json");
 
   const fs = require("fs");
@@ -73,7 +73,7 @@ app.get("/scans", (req, res) => {
   const history = folders.map(f => {
     const reportPath = path.join(resultsDir, f, "unified_report.json");
     const stats = fs.statSync(path.join(resultsDir, f));
-    let data = { target: f.replace(/_/g, "."), id: f, timestamp: stats.mtime };
+    let data = { target: f, id: f, timestamp: stats.mtime };
     
     if (fs.existsSync(reportPath)) {
         try {

@@ -1,0 +1,53 @@
+◇ injected env (3) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Initializing Asset Discovery...
+[INFO] Scan ID: google.com
+[INFO] Target: google.com
+[INFO] Output: results/google.com
+[INFO] Starting subdomain discovery...
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine -d google.com -silent
+[WARN] Primary discovery module returned no data
+[INFO] Expanding discovery reach...
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine --subs-only google.com
+[INFO] Secondary module found: 3
+[INFO] Consolidated unique assets: 3
+[INFO] Verifying live endpoints...
+[CMD] Running specialized module: engine -l results/google.com/subs_to_check.txt -ip -silent
+[INFO] Assets → subs=3, ips=3, urls=3
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine google.com A +short
+[CMD] Running specialized module: engine google.com AAAA +short
+[CMD] Running specialized module: engine google.com MX +short
+[CMD] Running specialized module: engine google.com TXT +short
+[CMD] Running specialized module: engine google.com CNAME +short
+[WARN] Module failed for CNAME
+[CMD] Running specialized module: engine google.com NS +short
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine google.com
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: echo | engine s_client -connect google.com:443 -servername google.com 2>/dev/null | engine x509 -noout -issuer -subject -dates
+[INFO] Recon completed successfully
+[PIPELINE] Asset Discovery completed
+
+[PIPELINE] Initiating Security Analysis...
+[VULN] Analyzing service exposures on google.com...
+[CMD] Running specialized module: engine -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21-23,25,53,80,81,88,110,111,135,139,143,443,445,548,587,631,636,873,990,993,995,1025-1029,1110,1433,1723,2000,2049,2121,3000,3128,3306,3389,3986,4848,5000,5060,5432,5666,5800,5900,6000,6001,6646,7070,8000,8008,8009,8080,8081,8443,8888,9000,9100,9999 google.com -oN results/google.com/engine.txt
+[VULN] Security engine processing 3 targets...
+[CMD] Running specialized module: engine -l results/google.com/urls.txt -t /home/kali/engine-templates/http/cves -t /home/kali/engine-templates/http/vulnerabilities -t /home/kali/engine-templates/http/exposures -t /home/kali/engine-templates/http/misconfiguration -t /home/kali/engine-templates/http/technologies -t /home/kali/engine-templates/http/exposed-panels -c 100 -bs 25 -rl 300 -mhe 50 -ss host-spray -duc -timeout 5 -retries 0 -jle results/google.com/engine.jsonl 2>&1
+[VULN] Analyzing web headers and configurations...
+[CMD] Running specialized module: engine -h https://play.google.com -Tuning 123 -nointeractive
+[CMD] Running specialized module: engine -h https://www.google.com -Tuning 123 -nointeractive
+[VULN] Service analysis completed for google.com
+[VULN] Web analysis finished for https://play.google.com
+[VULN] Web analysis finished for https://www.google.com
+[VULN] Analyzing web headers and configurations...
+[CMD] Running specialized module: engine -h https://google.com -Tuning 123 -nointeractive
+[VULN] Web analysis finished for https://google.com

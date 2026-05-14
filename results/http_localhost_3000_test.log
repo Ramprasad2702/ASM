@@ -1,0 +1,89 @@
+◇ injected env (3) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[PIPELINE] Starting full scan...
+
+[PIPELINE] Initializing Asset Discovery...
+[INFO] Scan ID: http_localhost_3000_test
+[INFO] Target: localhost
+[INFO] Output: results/http_localhost_3000_test
+[INFO] Starting subdomain discovery...
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine -d localhost -silent
+[INFO] Discovery module found: 1
+[INFO] Expanding discovery reach...
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine --subs-only localhost
+[INFO] Secondary module found: 1
+[INFO] Consolidated unique assets: 1
+[INFO] Verifying live endpoints...
+[CMD] Running specialized module: engine -l results/http_localhost_3000_test/subs_to_check.txt -ip -silent
+[WARN] Asset verification failed, falling back to basic resolution
+[WARN] DNS failed for system.localhost: ENOTFOUND
+[INFO] Assets → subs=0, ips=0, urls=1
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine localhost A +short
+[WARN] Module failed for A
+[CMD] Running specialized module: engine localhost AAAA +short
+[WARN] Module failed for AAAA
+[CMD] Running specialized module: engine localhost MX +short
+[WARN] Module failed for MX
+[CMD] Running specialized module: engine localhost TXT +short
+[WARN] Module failed for TXT
+[CMD] Running specialized module: engine localhost CNAME +short
+[WARN] Module failed for CNAME
+[CMD] Running specialized module: engine localhost NS +short
+[WARN] Module failed for NS
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: engine localhost
+[ERROR] WHOIS command failed for localhost: Command failed: whois localhost
+[CMD] Running specialized module: which engine
+[INFO] Module validated
+[CMD] Running specialized module: echo | engine s_client -connect localhost:443 -servername localhost 2>/dev/null | engine x509 -noout -issuer -subject -dates
+Could not find certificate from <stdin>
+[INFO] Recon completed successfully
+[PIPELINE] Asset Discovery completed
+
+[PIPELINE] Initiating Security Analysis...
+[VULN] Analyzing service exposures on localhost...
+[CMD] Running specialized module: engine -sT -T4 --min-rate 500 -sV -sC --script vuln -p 21-23,25,53,80,81,88,110,111,135,139,143,443,445,548,587,631,636,873,990,993,995,1025-1029,1110,1433,1723,2000,2049,2121,3000,3128,3306,3389,3986,4848,5000,5060,5432,5666,5800,5900,6000,6001,6646,7070,8000,8008,8009,8080,8081,8443,8888,9000,9100,9999 localhost -oN results/http_localhost_3000_test/engine.txt
+[VULN] Security engine processing 1 targets...
+[CMD] Running specialized module: engine -l results/http_localhost_3000_test/urls.txt -t /home/kali/engine-templates/http/cves -t /home/kali/engine-templates/http/vulnerabilities -t /home/kali/engine-templates/http/exposures -t /home/kali/engine-templates/http/misconfiguration -t /home/kali/engine-templates/http/technologies -t /home/kali/engine-templates/http/exposed-panels -c 100 -bs 25 -rl 300 -mhe 50 -ss host-spray -duc -timeout 5 -retries 0 -jle results/http_localhost_3000_test/engine.jsonl 2>&1
+[VULN] Analyzing web headers and configurations...
+[CMD] Running specialized module: engine -h http://localhost:3000/test -Tuning 123 -nointeractive
+[VULN] Web analysis finished for http://localhost:3000/test
+[VULN] Service analysis completed for localhost
+[VULN] Analysis finished
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35414
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35386
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35385
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35387
+[CMD] Running specialized module: searchsploit --cve CVE-2026-35388
+[CMD] Running specialized module: searchsploit --cve CVE-2026-28780
+[CMD] Running specialized module: searchsploit --cve CVE-2026-24072
+[CMD] Running specialized module: searchsploit --cve CVE-2026-23918
+[CMD] Running specialized module: searchsploit --cve CVE-2026-34059
+[CMD] Running specialized module: searchsploit --cve CVE-2026-29169
+[CMD] Running specialized module: searchsploit --cve CVE-2026-29168
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33523
+[CMD] Running specialized module: searchsploit --cve CVE-2026-34032
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33857
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33007
+[CMD] Running specialized module: searchsploit --cve CVE-2026-33006
+✅ Scan Completed
+[PIPELINE] Security Analysis completed
+
+[PIPELINE] Running Threat Intelligence Analysis...
+[THREAT] Starting threat intel for domain=localhost, ips=0, urls=1
+[THREAT] Querying intelligence databases for localhost (isIP: false)...
+[THREAT] Intel results: detections=0, pulses=0
+[THREAT] Performing historical record search for localhost...
+[THREAT] Search results: records=3, supply_chain=0
+[THREAT] URL enrichment for http://localhost:3000/test...
+[THREAT] URLScan submit failed for http://localhost:3000/test: Request failed with status code 400
+[THREAT] Complete. Risk=LOW (0), MITRE=0, Supply=0
+[PIPELINE] Threat Intelligence Analysis completed
+
+[PIPELINE] ✅ Final report generated: results/http_localhost_3000_test/unified_report.json

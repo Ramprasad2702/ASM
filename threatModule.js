@@ -319,14 +319,24 @@ async function runThreatIntel(domain, ips = [], urls = []) {
   let vtUrlHits     = 0;
   let passiveDnsRecords = [];
 
-  // --- Domain lookups ---
+  // --- Domain/IP lookups ---
   if (domain) {
-    console.log(`[THREAT] Querying intelligence databases for ${domain}...`);
-    [vtDomain, otxDomain, passiveDnsRecords] = await Promise.all([
-      vtLookup(`https://www.virustotal.com/api/v3/domains/${domain}`),
-      otxLookup(`https://otx.alienvault.com/api/v1/indicators/domain/${domain}/general`),
-      passiveDNS(domain)
-    ]);
+    const isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(domain);
+    console.log(`[THREAT] Querying intelligence databases for ${domain} (isIP: ${isIP})...`);
+    
+    if (isIP) {
+      [vtDomain, otxDomain] = await Promise.all([
+        vtLookup(`https://www.virustotal.com/api/v3/ip_addresses/${domain}`),
+        otxLookup(`https://otx.alienvault.com/api/v1/indicators/IPv4/${domain}/general`)
+      ]);
+      passiveDnsRecords = []; // Not applicable for IP directly in this context usually
+    } else {
+      [vtDomain, otxDomain, passiveDnsRecords] = await Promise.all([
+        vtLookup(`https://www.virustotal.com/api/v3/domains/${domain}`),
+        otxLookup(`https://otx.alienvault.com/api/v1/indicators/domain/${domain}/general`),
+        passiveDNS(domain)
+      ]);
+    }
     console.log(`[THREAT] Intel results: detections=${vtDomain.malicious}, pulses=${otxDomain.pulse_count}`);
   }
 

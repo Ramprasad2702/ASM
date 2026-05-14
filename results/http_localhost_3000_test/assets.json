@@ -1,0 +1,10 @@
+{
+    "domain": "localhost",
+    "assets": {
+        "subdomains": [],
+        "ips": [],
+        "urls": [
+            "http://localhost:3000/test"
+        ]
+    }
+}

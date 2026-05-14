@@ -754,7 +754,7 @@
   }
 
   async function pollResults(target) {
-    const safeTarget = target.replace(/[^a-z0-9]/gi, "_");
+    const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
     
     const interval = setInterval(async () => {
       try {
