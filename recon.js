@@ -38,7 +38,7 @@ const log = {
   error: (msg) => console.error(`[ERROR] ${msg}`),
   cmd: (msg) => {
     // Redact tool names from command log for anonymity
-    const redacted = msg.replace(/(subfinder|assetfinder|amass|httpx-toolkit|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
+    const redacted = msg.replace(/(subfinder|assetfinder|amass|httpx-toolkit|whatweb|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
     console.log(`[CMD] Running specialized module: ${redacted}`);
   }
 };
@@ -261,6 +261,20 @@ function tlsInfo(domain) {
   return out;
 }
 
+// ================= WHATWEB =================
+function whatwebLookup(target) {
+  if (!checkTool("whatweb")) return null;
+
+  log.info(`Running technology identification on ${target}...`);
+  const out = runCmd(`whatweb ${target} --color=never --no-errors`);
+
+  if (!out || out.error) {
+    return null;
+  }
+
+  return out;
+}
+
 // ================= MAIN =================
 async function main() {
   try {
@@ -374,6 +388,15 @@ async function main() {
 
     updateState(outDir, "recon_dns_tls", 15, `Resolved ${assets.ips.length} assets. Performing DNS/TLS checks...`);
 
+    // ===== WHATWEB =====
+    updateState(outDir, "tech_discovery", 18, "Identifying web technologies...");
+    const techResults = {};
+    const urlsToScan = assets.urls.slice(0, 5); // Limit to top 5 for speed
+    for (const url of urlsToScan) {
+      const tech = whatwebLookup(url);
+      if (tech) techResults[url] = tech;
+    }
+
     // ===== REPORT =====
     const report = {
       __meta__: {
@@ -382,9 +405,12 @@ async function main() {
         timestamp: new Date().toISOString()
       },
       domain,
-      dns: digRecords(domain),
-      whois: await whoisLookup(domain),
-      tls: tlsInfo(domain),
+      domain_dossier: {
+        dns: digRecords(domain),
+        whois: await whoisLookup(domain),
+        tls: tlsInfo(domain)
+      },
+      technologies: techResults,
       assets
     };
 
