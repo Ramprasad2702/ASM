@@ -25,13 +25,16 @@ RUN apt-get update && apt-get install -y \
     perl \
     libnet-ssleay-perl \
     libwhisker2-perl \
-    nikto \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
 RUN wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz && \
     rm go1.24.2.linux-amd64.tar.gz
+# Install Nikto manually
+RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto && \
+    ln -sf /opt/nikto/program/nikto.pl /usr/local/bin/nikto && \
+    chmod +x /opt/nikto/program/nikto.pl
 
 # Install Recon & Vuln Tools (Naabu removed as nmap is used)
 RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
