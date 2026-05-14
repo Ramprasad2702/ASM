@@ -38,7 +38,7 @@ const log = {
   error: (msg) => console.error(`[ERROR] ${msg}`),
   cmd: (msg) => {
     // Redact tool names from command log for anonymity
-    const redacted = msg.replace(/(subfinder|assetfinder|amass|httpx-toolkit|whatweb|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
+    const redacted = msg.replace(/(subfinder|assetfinder|httpx-toolkit|whatweb|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
     console.log(`[CMD] Running specialized module: ${redacted}`);
   }
 };

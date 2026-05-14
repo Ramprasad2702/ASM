@@ -391,20 +391,38 @@ async function runWebAnalysis(urls, dir) {
   return findings;
 }
 
-// ================= EXPLOITDB =================
-async function exploitdbLookup(cves) {
+// ================= CVE LOOKUP (NVD API) =================
+async function getCVEInfo(cve) {
+  try {
+    // NVD API v2
+    const url = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${cve}`;
+    const res = await axios.get(url, { timeout: 10000 });
+    
+    if (res.data && res.data.vulnerabilities && res.data.vulnerabilities.length > 0) {
+      const vuln = res.data.vulnerabilities[0].cve;
+      return {
+        id: vuln.id,
+        description: vuln.descriptions[0].value,
+        severity: vuln.metrics?.cvssMetricV31?.[0]?.cvssData?.baseSeverity || "UNKNOWN",
+        score: vuln.metrics?.cvssMetricV31?.[0]?.cvssData?.baseScore || 0,
+        references: vuln.references.slice(0, 3).map(r => r.url)
+      };
+    }
+    return null;
+  } catch (err) {
+    console.error(`[VULN] CVE lookup failed for ${cve}:`, err.message);
+    return null;
+  }
+}
+
+async function cveLookup(cves) {
   const results = {};
 
   for (let cve of cves) {
-    const res = await runCmd(`searchsploit --cve ${cve}`);
-
-    const hasExploit = !res.output.includes("No Results");
-
-    results[cve] = {
-      exploitable: hasExploit,
-      severity: hasExploit ? "high" : "medium",
-      raw: res.output.split("\n").slice(0, 5)
-    };
+    const data = await getCVEInfo(cve);
+    if (data) {
+      results[cve] = data;
+    }
   }
 
   return results;
@@ -477,8 +495,8 @@ async function main() {
     ...webFindings
   ];
 
-  const [exploitdb, geo] = await Promise.all([
-    exploitdbLookup(cves),
+  const [cveIntel, geo] = await Promise.all([
+    cveLookup(cves),
     geoLookup(ips)
   ]);
 
@@ -492,7 +510,7 @@ async function main() {
       urls: urls.length
     },
     geo,
-    exploitdb
+    cve_intel: cveIntel
   };
 
   atomicWrite(path.join(dir, FINAL_REPORT), report);

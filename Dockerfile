@@ -1,12 +1,13 @@
 FROM node:20-bookworm
 
+# Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NODE_ENV=production
 ENV PATH="/usr/local/go/bin:/root/go/bin:/usr/local/bin:${PATH}"
 ENV UV_THREADPOOL_SIZE=64
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Install system packages
+# Install system packages & cleanup
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
@@ -32,18 +33,11 @@ RUN wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz && \
     rm go1.24.2.linux-amd64.tar.gz
 
-# Install Recon & Vuln Tools
+# Install Recon & Vuln Tools (Naabu removed as nmap is used)
 RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
     go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
-    go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest && \
-    go install github.com/tomnomnom/assetfinder@latest && \
-    go install github.com/owasp-amass/amass/v4/...@master
-
-# Install Searchsploit
-RUN git clone --depth 1 https://github.com/offensive-security/exploitdb.git /opt/exploitdb && \
-    ln -sf /opt/exploitdb/searchsploit /usr/local/bin/searchsploit && \
-    chmod +x /opt/exploitdb/searchsploit
+    go install github.com/tomnomnom/assetfinder@latest
 
 # Compatibility symlink
 RUN ln -sf /root/go/bin/httpx /root/go/bin/httpx-toolkit
@@ -57,27 +51,26 @@ RUN subfinder -version && \
     whatweb --version && \
     nuclei -version && \
     nmap --version && \
-    nikto -Version && \
-    searchsploit -h
+    nikto -Version
 
 # App directory
 WORKDIR /app
 
-# Copy project
+# Copy project files
 COPY . .
 
 # Install node dependencies
 RUN npm install
 
-# Create directories
+# Create results directory
 RUN mkdir -p results && \
     mkdir -p /root/.config/subfinder
 
-# Make config generator executable
+# Make script executable
 RUN chmod +x generate-config.sh
 
-# Expose Render port
+# Expose web port
 EXPOSE 3000
 
-# Start server
-CMD ["sh", "-c", "./generate-config.sh /root/.config/subfinder/provider-config.yaml && node server.js"]
+# Start server (Generate config then start node)
+CMD ["sh", "-c", "mkdir -p /root/.config/subfinder && ./generate-config.sh /root/.config/subfinder/provider-config.yaml && node server.js"]
