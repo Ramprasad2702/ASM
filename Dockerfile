@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y \
     whois \
     openssl \
     nmap \
-    nikto \
-    exploitdb \
     python3 \
     python3-pip \
     build-essential \
@@ -33,6 +31,17 @@ RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && 
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
     go install github.com/tomnomnom/assetfinder@latest && \
     go install github.com/owasp-amass/amass/v4/...@master
+
+# Install Nikto
+RUN git clone https://github.com/sullo/nikto.git /opt/nikto && \
+    ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto && \
+    chmod +x /usr/local/bin/nikto
+
+# Install ExploitDB / Searchsploit
+RUN git clone https://github.com/offensive-security/exploitdb.git /opt/exploitdb && \
+    ln -s /opt/exploitdb/searchsploit /usr/local/bin/searchsploit && \
+    chmod +x /usr/local/bin/searchsploit
+
 
 # Create symlink for httpx-toolkit to match code
 RUN ln -s /root/go/bin/httpx /root/go/bin/httpx-toolkit
