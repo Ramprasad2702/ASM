@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     ca-certificates \
     perl \
+    libjson-perl \
+    libxml-writer-perl \
     libnet-ssleay-perl \
     libwhisker2-perl \
     && rm -rf /var/lib/apt/lists/*
