@@ -55,8 +55,7 @@ RUN subfinder -version && \
     httpx -version && \
     whatweb --version && \
     nuclei -version && \
-    nmap --version && \
-    nikto -Version
+    nmap --version 
 
 # App directory
 WORKDIR /app
