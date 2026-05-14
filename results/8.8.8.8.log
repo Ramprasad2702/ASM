@@ -54,3 +54,20 @@ getaddrinfo(whois.nic.google): Name or service not known
 [CMD] Running specialized module: engine -h https://dns.google -Tuning 123 -nointeractive
 [VULN] Service analysis completed for dns.google
 [VULN] Web analysis finished for https://dns.google
+[VULN] Analysis finished
+✅ Scan Completed
+[PIPELINE] Security Analysis completed
+
+[PIPELINE] Running Threat Intelligence Analysis...
+[THREAT] Starting threat intel for domain=dns.google, ips=1, urls=1
+[THREAT] Querying intelligence databases for dns.google (isIP: false)...
+[THREAT] Intel results: detections=0, pulses=50
+[THREAT] Performing historical record search for dns.google...
+[THREAT] Search results: records=3, supply_chain=0
+[THREAT] IP enrichment for 8.8.4.4...
+[THREAT] Shodan 8.8.4.4: ports=53,443, vulns=0
+[THREAT] URL enrichment for https://dns.google...
+[THREAT] Complete. Risk=LOW (10), MITRE=0, Supply=4
+[PIPELINE] Threat Intelligence Analysis completed
+
+[PIPELINE] ✅ Final report generated: results/8.8.8.8/unified_report.json

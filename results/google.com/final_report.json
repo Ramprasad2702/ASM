@@ -1,6 +1,398 @@
 {
-    "status": "running",
+    "status": "completed",
     "domain": "google.com",
-    "started_at": "2026-05-14T06:03:57.089Z",
-    "findings": []
+    "findings": [
+        {
+            "source": "Infrastructure",
+            "name": "Web Service Detected",
+            "severity": "low",
+            "port": "80/tcp",
+            "owasp": null
+        },
+        {
+            "source": "Infrastructure",
+            "name": "Web Service Detected",
+            "severity": "low",
+            "port": "443/tcp",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "SSL Info:           Subject:  /CN=*.google.com...",
+            "description": "SSL Info:           Subject:  /CN=*.google.com",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": "A02:2021-Cryptographic Failures"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[011799] /: An alt-svc header was found which is...",
+            "description": "[011799] /: An alt-svc header was found which is advertising HTTP/3. The endpoint is: ':443'. Nikto cannot test HTTP/3 over QUIC. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/alt-svc",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "ERROR: Failed to check for updates: 403...",
+            "description": "ERROR: Failed to check for updates: 403",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999100] /robots.txt: Uncommon header(s) 'report...",
+            "description": "[999100] /robots.txt: Uncommon header(s) 'reporting-endpoints' found, with contents: default=\"/_/PlayRobotsHttp/web-reports?context=eJzj8tDikmLw0pBiaL15jnUyEJcsOs_aBMRdQDwDiA0VLrHaA3GRxBXWBiD-VHWDVaD6Buu3Yl82lhJfNtOQQDZnIBbi4bh-euoFNoGOG0dOMSvJJ-UXxhfkJFaWZhanFpWlFsUbGRiZGZgaGukZmMUXGAAAp7Irig\".",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": "A05:2021-Security Misconfiguration"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/books/publish/' is...",
+            "description": "[999997] /robots.txt: Entry '/books/publish/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/work/myaccount/' i...",
+            "description": "[999997] /robots.txt: Entry '/work/myaccount/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/work/movie-device/...",
+            "description": "[999997] /robots.txt: Entry '/work/movie-device/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/work/xhr/getdevice...",
+            "description": "[999997] /robots.txt: Entry '/work/xhr/getdevicepermissions/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/store/people/detai...",
+            "description": "[999997] /robots.txt: Entry '/store/people/details/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/work/xhr/inviteadm...",
+            "description": "[999997] /robots.txt: Entry '/work/xhr/inviteadmin/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/work/internalPref/...",
+            "description": "[999997] /robots.txt: Entry '/work/internalPref/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/work/account/' is...",
+            "description": "[999997] /robots.txt: Entry '/work/account/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "ERROR: *** Error limit (20) reached for host, gi...",
+            "description": "ERROR: *** Error limit (20) reached for host, giving up. Last error: opening stream: can't connect (timeout): Interrupted system call. ***",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "ERROR: *** Consider using mitmproxy to avoid TLS...",
+            "description": "ERROR: *** Consider using mitmproxy to avoid TLS fingerprinting. ***",
+            "severity": "medium",
+            "url": "https://play.google.com",
+            "owasp": "A02:2021-Cryptographic Failures"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "SSL Info:           Subject:  /CN=www.google.com...",
+            "description": "SSL Info:           Subject:  /CN=www.google.com",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": "A02:2021-Cryptographic Failures"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[011799] /: An alt-svc header was found which is...",
+            "description": "[011799] /: An alt-svc header was found which is advertising HTTP/3. The endpoint is: ':443'. Nikto cannot test HTTP/3 over QUIC. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/alt-svc",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[95] /: Cookie __Secure-STRP created without the...",
+            "description": "[95] /: Cookie __Secure-STRP created without the httponly flag. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": "A07:2021-Identification and Authentication Failures"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[95] /: Cookie ; expires created without the htt...",
+            "description": "[95] /: Cookie ; expires created without the httponly flag. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": "A07:2021-Identification and Authentication Failures"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "ERROR: Failed to check for updates: 403...",
+            "description": "ERROR: Failed to check for updates: 403",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999962] /: Server banner changed from 'gws' to...",
+            "description": "[999962] /: Server banner changed from 'gws' to 'sffe'.",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999100] /robots.txt: Uncommon header(s) 'cross-...",
+            "description": "[999100] /robots.txt: Uncommon header(s) 'cross-origin-opener-policy-report-only' found, with contents: same-origin; report-to=\"static-on-bigtable\".",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999100] /travel/flights/search/: Uncommon heade...",
+            "description": "[999100] /travel/flights/search/: Uncommon header(s) 'reporting-endpoints' found, with contents: default=\"/_/FlightsFrontendUi/web-reports?context=eJwV0XtcTtkaB_DU876P-z2nYo7wGeEUlQml1loJ0yEqXd53v3tv5S4hJbdCGMY9YjQNpz7uuZ1iXD_jiBEdThq3CGMYM2QKozTjaFzO-c0f38_ae-29futZz2qe17GPu4uTLwRCn-YeTmG9PJyeDejplD2wp9OVGuW0pjrUyXvxCKerlducyg7fc_ZrE0nVlihKWxhFy59HUcKGaEqE2KvR1Od9NA2Adl4xtGBUDPUaF0M3FsfQz1kxVFweQw8htGkshcFQ2ALTl8ZSpXscveoZR_UVcVTTI548QuPpxdR4apcWTw2L4mlhdTzlf4inUlcb1fax0YRQG3lOt5GeZaM_VtjoUbaNLhXZ6PUZG3W7aSPvxzYa4GanPu52Wutlp-aBdlo8xE75S-w0a5OdNu-2k9seOwXvtVM19D-Kf27YKdxZo9JmGhW01OgcJLXX6JOOGvl30qivt0bZARo9DNToiNJoaJRGgZM0ik3WaPxMjVqmanQzR6P32_G-X6OJMBXeHNRoxr80SoFOZzV6WqpR9U2McOOWRrYqje4-0Ki2DhkfOSi1u4OCejhoMBQNdJDPGAd56g4aPs9BNijIctCPax1UXu6gKzDzioO0-w5yQPAjB7m-dlBto4P6uug0FnJa6aR11imht041MM5Pp4v-Oq0O0mlLsE6Fw3QKGK7TxNE6rZ-sU4sZOh2Ab1N0KoM1s3VaB13Tdeq4Wqe4dTq5bNBpw2lkndFJL9HpRRnyK3SKvqtTMRtU52WQez-D7vQ3aFCEQYEQBMHgZTcoSjdo7wKDemcY5AMzYecKg-auNOjbTQaVQWO-Qe-2G5S6y6DEPQa12W9QyxMGfXXOoHzQSg2qv4Cx3KC3sPMqMmHHLYMe3zZoX5VBbncMKobDcP2eQU_uG3T5kUEnnxrUtN6gD-8MWvvBoA5NTPo7mRQJGWzSgaYmHYKXcLGFSYO6mhQMmZDYA_P9TBrhb9JoqAffwSa9gi-lSWtDTTodYdJlzaRjDsxNMKlxsknXk0xan2pSRYZJXVeZdB6MNSa9zTdpW4FJuw-a1LnYpIZTeZaHWQWWaUsKLNm7Ciwr7n5n2QzpO69alsEayAM_zxsWCWlulZYl8NO-SkuxZ5XlVcYdS9vMO5b57Gzd2N3Zmgsu3s7WScHO1lDpbC0Z4mwtCne2XhzpbPWLcLZuveBiLYQiuA6vZ4-yUjq8iLS-SYyydoyJtgbERlvDYNGWaGvugzHWY71jrHP_iLEu6RxnPWzEWad-TTwNjiY348lDO3ES9Lkawqd_CuGz4FoTwu4gnoXwSOhbF8I5b0I4F05YBJ-EM1ACF-AilMMVKG4juKWH4Nbg6Cw4zkuwHcb0Etypv-CcAMFlMChQcDAIcA0R3AvWScHPhgh-GSb4t-GCB0YKjoSDUBEleFOM4BqbYKUJZkNwwgxkpgheMAff5uN5AeqC7IWYWyV4EWTBN5CyWnDQOsESIiAa3q0XvHWj4AJokiO4cJPgxzD2INYWCa4uFnz3mOBbJYI9zuLcpYK_L0N9lwTvuoyzV-AssP-a4CJwvyk4tVLwsduCJ1QJ9vlecOB9wYd-FPykWnAt_PcpsmsEd3uGfV7jP0iH-ZAB594LPvIB9ThJ7t5McnxzyZ-2khwDHm0lH2kv2buD5Haukl3BHUa4Sd7fVXJ7T8k53SXv9cLYS3IueP9N8jkohSm-kpNgOqyEDgGS6wdI3jxY8hewAz4OkdwbtinJSyMkX4Z-UagDwuIkp06RfBaeTJNcA0ay5EQYDytmSA5PkTwmDfVCLGTORvY87L9A8vEMySegNlPy08WSR2chZ5lkl88ld4IeayWPzJH84EvJv-VJdt4quQ5uF0ieuF1y9k7Ju-EV5BdKLjiA2g9K7nxI8qKvUS-kHJU8G-ZAAyw-jrpPoYcQDo2nJV87I3lViWS3MsnHLkn2_Q9qK8e5KiT3_Q4jHL2O3NuSvapQzz3JkffRA_gdlj6QHPVIcvJT9PMX9BOW1Ur-DCY8k-z_AuesR28a0BsYDxvfYs179AX-alEcB4lwG0Kb4xlmtVD8v9aK53dSXPIXxXnuirt0wfxHivdAIfzSTXENPIPn8CvUQT3EfIxciAc7aDAOQrwUSwiFVn6KB_dXvOMTZAUo7jdIsR_0BwVzgxRnQCYkD1a8PFjxawgTWB-m2AFZsASWwWdwEVYOVbwKPIdh7XDFuZ8iH57DryDDFdNIxanQJUJxb_ghVvEjGBaHf3TFsYZiG2RAFiyFz03F56H1WJwbXkAdLEpQvBd-GIe6xisOn6B45CTFE5MVN6Yrfg9OcxS7zFPcDnbDHiiEfXAyQ_E3megznIUtyxV_BUdWKC7YgDPloPY87Ad1kF-o-NR-xb4HFdf-E9_g9GHkHMc8zD-Fms7gPs8rvgP3oUcZevJvxf-A5-XIgpdQB-43FHtUKi6rUtz2Z_TqCb5Dbh3usF5xUAPuCUJAwHAI__O9EfcEYbDGcxTngL3z7wPbt2x6r3zLNWvba5u-aGjS3Wd8SmpCetq4uZOm-0xOS5mZPmnmRJ_J05OmTE2f7TMnKcHf13-Ab4Cff19fv4RZvv8Hhw9bRg\".",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": "A05:2021-Security Misconfiguration"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/alerts/manage/' is...",
+            "description": "[999997] /robots.txt: Entry '/alerts/manage/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/s2/search/social/'...",
+            "description": "[999997] /robots.txt: Entry '/s2/search/social/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/s2/static/' is ret...",
+            "description": "[999997] /robots.txt: Entry '/s2/static/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/local/dealership/'...",
+            "description": "[999997] /robots.txt: Entry '/local/dealership/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/index.html?' is re...",
+            "description": "[999997] /robots.txt: Entry '/index.html?' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[999997] /robots.txt: Entry '/trends/hottrends?/...",
+            "description": "[999997] /robots.txt: Entry '/trends/hottrends?/' is returned a non-forbidden or redirect HTTP code (). See: https://portswigger.net/kb/issues/00600600_robots-txt-file",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "ERROR: *** Error limit (20) reached for host, gi...",
+            "description": "ERROR: *** Error limit (20) reached for host, giving up. Last error: opening stream: can't connect (timeout): Interrupted system call. ***",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": null
+        },
+        {
+            "source": "Web Analysis",
+            "name": "ERROR: *** Consider using mitmproxy to avoid TLS...",
+            "description": "ERROR: *** Consider using mitmproxy to avoid TLS fingerprinting. ***",
+            "severity": "medium",
+            "url": "https://www.google.com",
+            "owasp": "A02:2021-Cryptographic Failures"
+        },
+        {
+            "source": "Web Analysis",
+            "name": "[FAIL] Unable to connect to google.com:443....",
+            "description": "[FAIL] Unable to connect to google.com:443.",
+            "severity": "medium",
+            "url": "https://google.com",
+            "owasp": null
+        }
+    ],
+    "risk": {
+        "score": 100,
+        "level": "HIGH"
+    },
+    "attack_surface": {
+        "services": [
+            {
+                "port": "80/tcp",
+                "state": "open",
+                "service": "http",
+                "version": "gws",
+                "scripts": [
+                    "|_http-aspnet-debug: ERROR: Script execution failed (use -d to debug)",
+                    "|_http-server-header: gws",
+                    "|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.",
+                    "|_http-csrf: Couldn't find any CSRF vulnerabilities.",
+                    "| fingerprint-strings:",
+                    "|   GetRequest:",
+                    "|     HTTP/1.0 200 OK",
+                    "|     Content-Type: text/html; charset=ISO-8859-1",
+                    "|     Date: Thu, 14 May 2026 06:04:17 GMT",
+                    "|     Expires: -1",
+                    "|     Cache-Control: private, max-age=0",
+                    "|     Content-Security-Policy-Report-Only: object-src 'none';base-uri 'self';script-src 'nonce-Ouaa6WNI7O_JlCjet8nnpQ' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other-hp",
+                    "|     P3P: CP=\"This is not a P3P policy! See g.co/p3phelp for more info.\"",
+                    "|     Server: gws",
+                    "|     X-XSS-Protection: 0",
+                    "|     X-Frame-Options: SAMEORIGIN",
+                    "|     Set-Cookie: __Secure-STRP=AEEP7gJ8bN_bxZf0jNDeonY95iKITa8lMqiA-6hq8QT0OJMi3oVcpYWBtqYKlan9kIfE4BvN7IMahnHWMnhPpuUF8gPfuvVGueS4; expires=Thu, 14-May-2026 06:09:17 GMT; path=/; domain=.google.com; Secure; SameSite=strict",
+                    "|     Set-Cookie: AEC=AaJma5vY3Un_oLBGXrD9t5xxJ0qlqSWSLJX7w0O8rccFDz0Tfe8O6rfY4Qs; expires=Tue, 10-Nov-2026 06:04:17 GMT; path=/; domain=.google.com; Secure; Http",
+                    "|   HTTPOptions:",
+                    "|     HTTP/1.0 405 Method Not Allowed",
+                    "|     Content-Type: text/html; charset=UTF-8",
+                    "|     Referrer-Policy: no-referrer",
+                    "|     Content-Length: 1592",
+                    "|     Date: Thu, 14 May 2026 06:04:17 GMT",
+                    "|     <!DOCTYPE html>",
+                    "|     <html lang=en>",
+                    "|     <meta charset=utf-8>",
+                    "|     <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">",
+                    "|     <title>Error 405 (Method Not Allowed)!!1</title>",
+                    "|     <style>",
+                    "|_    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding",
+                    "|_http-vuln-cve2014-3704: ERROR: Script execution failed (use -d to debug)",
+                    "|_http-dombased-xss: Couldn't find any DOM based XSS."
+                ]
+            },
+            {
+                "port": "443/tcp",
+                "state": "open",
+                "service": "ssl/https",
+                "version": "gws",
+                "scripts": [
+                    "|_http-aspnet-debug: ERROR: Script execution failed (use -d to debug)",
+                    "| fingerprint-strings:",
+                    "|   GetRequest:",
+                    "|     HTTP/1.0 200 OK",
+                    "|     Content-Type: text/html; charset=ISO-8859-1",
+                    "|     Date: Thu, 14 May 2026 06:04:21 GMT",
+                    "|     Expires: -1",
+                    "|     Cache-Control: private, max-age=0",
+                    "|     Content-Security-Policy-Report-Only: object-src 'none';base-uri 'self';script-src 'nonce-DX64JQAZJkfQE42Iey8R1A' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other-hp",
+                    "|     Accept-CH: Sec-CH-Prefers-Color-Scheme",
+                    "|     P3P: CP=\"This is not a P3P policy! See g.co/p3phelp for more info.\"",
+                    "|     Server: gws",
+                    "|     X-XSS-Protection: 0",
+                    "|     X-Frame-Options: SAMEORIGIN",
+                    "|     Set-Cookie: __Secure-STRP=AEEP7gJm5nFeAHP5btzOh48HLxI0Pdc30o3NpH7fJ_ozUj2uashcVpLTocz8Kgq39frkL5V7xI1chldRqcWgGxcVwKLPqKcU3fW5; expires=Thu, 14-May-2026 06:09:21 GMT; path=/; domain=.google.com; Secure; SameSite=strict",
+                    "|_    Set-Cookie: AEC=AaJma5vPRP-CKSC20Obv6YB4uFKMZWsDY5Gzm3llnaRoktKqN9niJB-tlFw; expires=Tue, 10-Nov-2026 06:04:21 GMT;",
+                    "|_http-dombased-xss: Couldn't find any DOM based XSS.",
+                    "|_http-server-header: gws",
+                    "|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.",
+                    "|_http-csrf: Couldn't find any CSRF vulnerabilities.",
+                    "|_http-vuln-cve2014-3704: ERROR: Script execution failed (use -d to debug)"
+                ]
+            }
+        ],
+        "urls": 3
+    },
+    "geo": {
+        "172.217.24.142": {
+            "status": "success",
+            "country": "Japan",
+            "countryCode": "JP",
+            "region": "13",
+            "regionName": "Tokyo",
+            "city": "Chiyoda City",
+            "zip": "100-0001",
+            "lat": 35.694,
+            "lon": 139.754,
+            "timezone": "Asia/Tokyo",
+            "isp": "Google LLC",
+            "org": "Google LLC",
+            "as": "AS15169 Google LLC",
+            "query": "172.217.24.142"
+        },
+        "142.251.155.119": {
+            "status": "success",
+            "country": "United States",
+            "countryCode": "US",
+            "region": "CA",
+            "regionName": "California",
+            "city": "Mountain View",
+            "zip": "94043",
+            "lat": 37.4225,
+            "lon": -122.085,
+            "timezone": "America/Los_Angeles",
+            "isp": "Google LLC",
+            "org": "Google LLC",
+            "as": "AS15169 Google LLC",
+            "query": "142.251.155.119"
+        },
+        "142.251.221.206": {
+            "status": "success",
+            "country": "United States",
+            "countryCode": "US",
+            "region": "CA",
+            "regionName": "California",
+            "city": "Mountain View",
+            "zip": "94043",
+            "lat": 37.4225,
+            "lon": -122.085,
+            "timezone": "America/Los_Angeles",
+            "isp": "Google LLC",
+            "org": "Google LLC",
+            "as": "AS15169 Google LLC",
+            "query": "142.251.221.206"
+        }
+    },
+    "exploitdb": {}
 }

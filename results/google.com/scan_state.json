@@ -1,6 +1,6 @@
 {
-    "stage": "web_analysis_done",
-    "progress": 85,
-    "message": "Web layer analysis complete",
-    "timestamp": "2026-05-14T06:11:37.389Z"
+    "stage": "completed",
+    "progress": 100,
+    "message": "Analysis complete. Generating dashboard...",
+    "updated_at": "2026-05-14T06:16:37.151Z"
 }
