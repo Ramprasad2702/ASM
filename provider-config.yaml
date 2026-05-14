@@ -1,0 +1,8 @@
+censys:
+  - YOUR_CENSYS_KEY
+chaos:
+  - YOUR_CHAOS_KEY
+github:
+  - YOUR_GITHUB_KEY
+shodan:
+  - YOUR_SHODAN_KEY

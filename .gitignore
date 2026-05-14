@@ -1,0 +1,7 @@
+node_modules/
+results/
+.env
+provider-config.yaml
+*.log
+error.json
+scan_state.json

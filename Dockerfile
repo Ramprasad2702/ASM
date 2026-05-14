@@ -40,6 +40,10 @@ RUN ln -s /root/go/bin/httpx /root/go/bin/httpx-toolkit
 # Update Nuclei Templates
 RUN nuclei -update-templates
 
+# Setup Subfinder Config
+RUN mkdir -p /root/.config/subfinder
+COPY provider-config.yaml /root/.config/subfinder/provider-config.yaml
+
 # Create app directory
 WORKDIR /app
 
@@ -58,5 +62,8 @@ EXPOSE 3000
 # Environment
 ENV NODE_ENV=production
 
-# Start server
-CMD ["node", "server.js"]
+# Make script executable
+RUN chmod +x generate-config.sh
+
+# Start server (Generate config then start node)
+CMD ["sh", "-c", "./generate-config.sh /root/.config/subfinder/provider-config.yaml && node server.js"]
