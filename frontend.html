@@ -580,6 +580,10 @@
               <span class="stat-value badge risk-low" id="val-risk">LOW</span>
             </div>
           </div>
+
+        <div id="domain-intel-section" style="display: none; margin-bottom: 30px;">
+          <h3 class="section-title">Domain Intelligence</h3>
+          <div id="domain-intel-container" class="stats-grid"></div>
         </div>
 
         <h3 class="section-title">MITRE ATT&CK Techniques</h3>
@@ -606,6 +610,33 @@
         <h3 class="section-title">Supply Chain / Third Party Domains</h3>
         <div id="supply-container">
           <div class="empty-state">No supply chain data</div>
+        </div>
+
+        <h3 class="section-title">IP Reputation & Shodan Intelligence</h3>
+        <div id="ip-intel-container" class="stats-grid">
+          <div class="empty-state">No IP reputation data</div>
+        </div>
+
+        <h3 class="section-title">Passive DNS Records</h3>
+        <div id="passive-dns-container" class="stats-grid">
+          <div class="empty-state">No passive DNS records</div>
+        </div>
+
+        <h3 class="section-title">Historical Scan Activity</h3>
+        <div id="history-activity-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>URL</th>
+                <th>Result</th>
+                <th>Engine/Server</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="history-activity-tbody">
+              <tr><td colspan="4" class="empty-state">No historical activity detected</td></tr>
+            </tbody>
+          </table>
         </div>
 
       </div>
@@ -654,10 +685,9 @@
             </div>
           </div>
           <div class="chart-card">
-            <h3 class="section-title">Security Posture</h3>
-            <div class="chart-container" style="flex-direction: column; text-align: center;">
-              <div id="risk-score-display" style="font-size: 3rem; font-weight: 700; color: var(--accent-blue);">0</div>
-              <div style="color: var(--text-secondary);">Average Risk Score</div>
+            <h3 class="section-title">Findings by Source</h3>
+            <div class="chart-container">
+              <canvas id="barChart"></canvas>
             </div>
           </div>
         </div>
@@ -688,6 +718,13 @@
           </div>
         </div>
 
+        <div id="tech-section">
+          <h3 class="section-title">Technology Stack</h3>
+          <div id="tech-container" class="stats-grid">
+            <div class="empty-state">No technology data identified.</div>
+          </div>
+        </div>
+
         <h3 class="section-title">Discovered IP Geolocations</h3>
         <div class="stats-grid" id="geo-grid">
           <div class="empty-state">No geolocation data found.</div>
@@ -714,6 +751,10 @@
         <div id="owasp-summary-container"></div>
         <div id="vuln-container">
           <div class="empty-state">No vulnerabilities detected.</div>
+        </div>
+        <div id="cve-intel-section" style="display: none;">
+          <h3 class="section-title">CVE Intelligence (NVD)</h3>
+          <div id="cve-intel-container"></div>
         </div>
       </div>
 
@@ -844,26 +885,28 @@
   }
 
   let severityChart = null;
+  let barChart = null;
 
-  function updateSeverityChart(findings) {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+  function updateCharts(findings) {
+    const sevCounts = { critical: 0, high: 0, medium: 0, low: 0 };
+    const sourceCounts = {};
+
     findings.forEach(f => {
       const s = (f.severity || 'low').toLowerCase();
-      if (counts.hasOwnProperty(s)) counts[s]++;
+      if (sevCounts.hasOwnProperty(s)) sevCounts[s]++;
+      
+      const src = f.source || 'Other';
+      sourceCounts[src] = (sourceCounts[src] || 0) + 1;
     });
 
-    const ctx = document.getElementById('severityChart').getContext('2d');
-    
-    if (severityChart) {
-      severityChart.destroy();
-    }
-
-    severityChart = new Chart(ctx, {
-      type: 'doughnut',
+    const sevCtx = document.getElementById('severityChart').getContext('2d');
+    if (severityChart) severityChart.destroy();
+    severityChart = new Chart(sevCtx, {
+      type: 'pie',
       data: {
         labels: ['Critical', 'High', 'Medium', 'Low'],
         datasets: [{
-          data: [counts.critical, counts.high, counts.medium, counts.low],
+          data: [sevCounts.critical, sevCounts.high, sevCounts.medium, sevCounts.low],
           backgroundColor: ['#3E2723', '#EF4444', '#F59E0B', '#10B981'],
           borderColor: '#0B1221',
           borderWidth: 2
@@ -877,16 +920,46 @@
             display: true,
             position: 'bottom',
             labels: { color: '#94A3B8', padding: 20, font: { family: 'Inter', size: 12 } }
-          },
+          }
+        }
+      }
+    });
+
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    if (barChart) barChart.destroy();
+    barChart = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(sourceCounts),
+        datasets: [{
+          label: 'Findings',
+          data: Object.values(sourceCounts),
+          backgroundColor: '#38BDF8',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
           tooltip: {
             backgroundColor: '#0B1221',
             titleColor: '#F8FAFC',
-            bodyColor: '#94A3B8',
-            borderColor: '#1E293B',
-            borderWidth: 1
+            bodyColor: '#94A3B8'
           }
         },
-        cutout: '70%'
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#94A3B8' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94A3B8' }
+          }
+        }
       }
     });
   }
@@ -899,6 +972,27 @@
     const threat = data.threat_intel || {};
     const basic = threat.basic_intel || {};
     const corr = threat.correlation || {};
+
+    // Domain Intelligence (VT Metadata)
+    const meta = basic.virustotal_domain?.metadata;
+    if (meta) {
+      document.getElementById('domain-intel-section').style.display = 'block';
+      const metaHtml = `
+        <div class="stat-card" style="padding: 15px; flex-direction: column; align-items: flex-start;">
+          <div class="stat-label">Registrar</div>
+          <div class="stat-value" style="font-size: 1.1rem;">${meta.registrar || 'N/A'}</div>
+        </div>
+        <div class="stat-card" style="padding: 15px; flex-direction: column; align-items: flex-start;">
+          <div class="stat-label">Creation Date</div>
+          <div class="stat-value" style="font-size: 1.1rem;">${meta.creation_date || 'N/A'}</div>
+        </div>
+        <div class="stat-card" style="padding: 15px; flex-direction: column; align-items: flex-start;">
+          <div class="stat-label">Reputation</div>
+          <div class="stat-value" style="font-size: 1.1rem; color: ${meta.reputation >= 0 ? 'var(--low)' : 'var(--high)'}">${meta.reputation || 0}</div>
+        </div>
+      `;
+      document.getElementById('domain-intel-container').innerHTML = metaHtml;
+    }
     
     // Set basic stats
     document.getElementById('val-urls').innerText = basic.urls_checked || 0;
@@ -958,6 +1052,55 @@
       document.getElementById('supply-container').innerHTML = supplyHtml;
     }
 
+    // Render IP Intelligence (AbuseIPDB + Shodan)
+    const ipIntel = threat.ip_intel || [];
+    if (ipIntel.length > 0) {
+      const ipHtml = ipIntel.map(item => {
+        const abuse = item.abuseipdb || {};
+        const shodan = item.shodan || {};
+        return `
+          <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px; border-left: 4px solid ${abuse.abuse_score > 20 ? 'var(--high)' : 'var(--accent-blue)'};">
+            <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 8px;">${item.ip}</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              Reputation: <span style="color: ${abuse.abuse_score > 20 ? 'var(--high)' : 'var(--low)'}; font-weight: bold;">${abuse.abuse_score || 0}%</span><br>
+              ISP: ${abuse.isp || 'N/A'}<br>
+              Usage: ${abuse.usage_type || 'N/A'}<br>
+              ${shodan.open_ports ? `Ports: <span style="color: var(--accent-blue);">${shodan.open_ports.join(', ')}</span><br>` : ''}
+              ${shodan.vulns && shodan.vulns.length > 0 ? `<span style="color: var(--high);">Vulnerabilities: ${shodan.vulns.join(', ')}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('ip-intel-container').innerHTML = ipHtml;
+    }
+
+    // Render Passive DNS
+    const passiveDns = threat.passive_intel?.passive_dns || [];
+    if (passiveDns.length > 0) {
+      const dnsHtml = passiveDns.map(d => `
+        <div class="stat-card" style="padding: 12px 15px; border-radius: 8px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">${d.host}</div>
+            <div style="font-size: 0.8rem; color: var(--accent-blue);">${d.ip}</div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('passive-dns-container').innerHTML = dnsHtml;
+    }
+
+    // Render Historical Scans (URLScan)
+    const historyScans = threat.passive_intel?.urlscan_scans || [];
+    if (historyScans.length > 0) {
+      document.getElementById('history-activity-tbody').innerHTML = historyScans.map(s => `
+        <tr>
+          <td style="color:var(--text-primary); font-size: 0.9rem; word-break: break-all;">${s.url}</td>
+          <td><span class="badge ${s.malicious ? 'risk-high' : 'risk-low'}">${s.malicious ? 'MALICIOUS' : 'CLEAN'} (${s.score})</span></td>
+          <td style="color:var(--text-secondary); font-size: 0.85rem;">${s.server || 'Unknown'}<br>${s.asnname || ''}</td>
+          <td style="color:var(--text-secondary); font-size: 0.8rem;">${s.scan_date ? new Date(s.scan_date).toLocaleDateString() : 'N/A'}</td>
+        </tr>
+      `).join('');
+    }
+
     // --- NEW: Dashboard Overview ---
     const recon = data.recon_summary || {};
     const vuln = data.vulnerability || {};
@@ -983,8 +1126,7 @@
     else { dashRiskEl.classList.add('risk-critical'); dashRiskIcon.classList.add('risk-icon'); }
 
     // --- CHART UPDATE ---
-    updateSeverityChart(vulnFindings);
-    document.getElementById('risk-score-display').innerText = (data.final_risk && data.final_risk.score) ? data.final_risk.score : 0;
+    updateCharts(vulnFindings);
 
     // CRITICAL FINDINGS SUMMARY
     const criticalFindings = vulnFindings.filter(f => ['critical', 'high'].includes((f.severity || '').toLowerCase()));
@@ -1024,10 +1166,10 @@
       if (dnsHtml) document.getElementById('dns-container').innerHTML = dnsHtml;
     }
 
-    // TLS Info
+    // TLS Info (testssl.sh & SSLyze)
     if (reconData.tls) {
       const tlsContent = document.getElementById('tls-container');
-      if (reconData.tls === 'tls_failed') {
+      if (reconData.tls === 'tls_failed' || reconData.tls === 'tls_scan_failed') {
         tlsContent.innerHTML = `
           <div class="empty-state" style="color: var(--risk-high); padding: 20px;">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="margin-bottom: 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -1035,26 +1177,28 @@
           </div>
         `;
       } else {
+        const tlsData = typeof reconData.tls === 'string' ? reconData.tls : JSON.stringify(reconData.tls, null, 2);
         tlsContent.innerHTML = `
-          <div class="finding-detail" style="border-left-color: #38BDF8;">${reconData.tls}</div>
+          <div class="finding-detail" style="border-left-color: #38BDF8; max-height: 500px; overflow-y: auto;">${tlsData}</div>
         `;
       }
     }
 
-    // WHOIS Info
-    if (reconData.whois) {
+    // WHOIS / RDAP Info
+    const regData = reconData.rdap || reconData.whois;
+    if (regData) {
       const whoisContent = document.getElementById('whois-container');
-      if (reconData.whois.error) {
+      if (regData.error) {
         whoisContent.innerHTML = `
           <div class="empty-state" style="color: var(--risk-high);">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="margin-bottom: 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            WHOIS lookup failed for this domain. This can happen for invalid domains or connection timeouts.
+            Registration lookup failed for this domain.
           </div>
         `;
       } else {
-        const whoisRaw = reconData.whois.raw || JSON.stringify(reconData.whois, null, 2);
+        const regRaw = regData.raw || JSON.stringify(regData, null, 2);
         whoisContent.innerHTML = `
-          <div class="finding-detail" style="border-left-color: #A78BFA; max-height: 400px; overflow-y: auto;">${whoisRaw}</div>
+          <div class="finding-detail" style="border-left-color: #A78BFA; max-height: 400px; overflow-y: auto;">${regRaw}</div>
         `;
       }
     }
@@ -1098,20 +1242,18 @@
       document.getElementById('geo-grid').innerHTML = geoHtml;
     }
 
-    if (vuln.attack_surface && vuln.attack_surface.services) {
-      const servicesHtml = vuln.attack_surface.services.map(s => `
-        <div class="supply-card" style="align-items: flex-start; padding: 18px;">
-          <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
-            <div style="color: var(--accent-blue); font-weight: 800; font-size: 1.1rem; width: 80px; border-right: 1px solid var(--border-color);">${s.port}</div>
-            <div style="flex: 1;">
-              <div style="color: var(--text-primary); font-weight: 600; font-size: 1.05rem;">${s.service.toUpperCase()}</div>
-              <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Version: <span style="color: var(--accent-blue);">${s.version || 'Unknown'}</span></div>
-            </div>
-            <div class="badge risk-low" style="font-size: 0.7rem;">OPEN</div>
-          </div>
+      if (servicesHtml) document.getElementById('services-container').innerHTML = servicesHtml;
+    }
+
+    // Technology Stack (WhatWeb)
+    if (reconData.technologies) {
+      const techHtml = Object.entries(reconData.technologies).map(([url, output]) => `
+        <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+          <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 5px; font-size: 0.85rem; word-break: break-all;">${url}</div>
+          <div style="color: var(--text-secondary); font-size: 0.85rem;">${output}</div>
         </div>
       `).join('');
-      if (servicesHtml) document.getElementById('services-container').innerHTML = servicesHtml;
+      if (techHtml) document.getElementById('tech-container').innerHTML = techHtml;
     }
 
     // --- GROUPED VULNERABILITIES ---
@@ -1197,6 +1339,24 @@
           </div>
         `;
         document.getElementById('owasp-summary-container').innerHTML = owaspHtml;
+      }
+
+      // --- CVE INTEL ---
+      if (vuln.cve_intel && Object.keys(vuln.cve_intel).length > 0) {
+        document.getElementById('cve-intel-section').style.display = 'block';
+        const cveHtml = Object.entries(vuln.cve_intel).map(([id, info]) => `
+          <div class="mitre-card" style="border-left-color: var(--high);">
+            <div class="mitre-header">
+              <strong class="mitre-id">${id}</strong>
+              <span class="badge risk-high">${info.severity} (Score: ${info.score})</span>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); margin: 8px 0;">${info.description}</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              ${(info.references || []).map(r => `<a href="${r}" target="_blank" style="color: var(--accent-blue); font-size: 0.8rem; text-decoration: none;">View Reference</a>`).join('')}
+            </div>
+          </div>
+        `).join('');
+        document.getElementById('cve-intel-container').innerHTML = cveHtml;
       }
     }
   }

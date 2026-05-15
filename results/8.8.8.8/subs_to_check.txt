@@ -1,3 +1,0 @@
-dbhacerinces.dns.google
-dns64.dns.google
-dns.google

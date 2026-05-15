@@ -38,7 +38,7 @@ const log = {
   error: (msg) => console.error(`[ERROR] ${msg}`),
   cmd: (msg) => {
     // Redact tool names from command log for anonymity
-    const redacted = msg.replace(/(subfinder|assetfinder|httpx-toolkit|whatweb|dig|nmap|nuclei|nikto|openssl|whois)/gi, "engine");
+    const redacted = msg.replace(/(subfinder|assetfinder|httpx-toolkit|whatweb|dig|nmap|nuclei|nikto|openssl|whois|dnsx|testssl\.sh|sslyze)/gi, "engine");
     console.log(`[CMD] Running specialized module: ${redacted}`);
   }
 };
@@ -203,62 +203,74 @@ function secondaryDiscovery(domain) {
   return subs;
 }
 
-// ================= DIG =================
-function digRecords(domain) {
-  if (!checkTool("dig")) return {};
+// ================= DNSX =================
+function dnsxLookup(domain) {
+  if (!checkTool("dnsx")) return {};
 
+  log.info(`Running DNS discovery with dnsx on ${domain}...`);
   const records = {};
-  const types = ["A", "AAAA", "MX", "TXT", "CNAME", "NS"];
+  const types = ["a", "aaaa", "mx", "txt", "cname", "ns"];
 
   for (let type of types) {
-    const out = runCmd(`dig ${domain} ${type} +short`);
-
-    if (!out || out.error) {
-      log.warn(`Module failed for ${type}`);
-      continue;
-    } else {
-      records[type] = out.split("\n");
+    const out = runCmd(`dnsx -d ${domain} -${type} -resp-only -silent`);
+    if (out && !out.error) {
+      records[type.toUpperCase()] = out.split("\n").map(s => s.trim()).filter(Boolean);
     }
   }
 
   return records;
 }
 
-// ================= WHOIS =================
-async function whoisLookup(domain) {
-  if (whoisJson) {
-    try {
-      return await whoisJson(domain);
-    } catch (err) {
-      log.warn("Structured WHOIS failed, fallback to CLI");
+// ================= RDAP (WHOIS Replacement) =================
+async function rdapLookup(domain) {
+  log.info(`Querying RDAP for ${domain}...`);
+  try {
+    const response = await axios.get(`https://rdap.org/domain/${domain}`, {
+      timeout: 10000,
+      headers: { 'Accept': 'application/rdap+json' }
+    });
+    return response.data;
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      log.warn(`RDAP record not found for ${domain}`);
+      return { error: "not_found" };
+    }
+    log.warn(`RDAP lookup failed for ${domain}: ${err.message}`);
+    return { error: "rdap_failed", message: err.message };
+  }
+}
+
+// ================= TLS ANALYSIS (testssl.sh & SSLyze) =================
+async function tlsAnalysis(domain, outDir) {
+  const results = {};
+
+  if (checkTool("testssl.sh")) {
+    log.info(`Running testssl.sh on ${domain}...`);
+    const testsslFile = path.join(outDir, "testssl.json");
+    runCmd(`testssl.sh --jsonfile ${testsslFile} --quiet --nodns none ${domain}`, 300000);
+    if (fs.existsSync(testsslFile)) {
+      try {
+        results.testssl = JSON.parse(fs.readFileSync(testsslFile));
+      } catch (e) {
+        log.warn("Failed to parse testssl.json");
+      }
     }
   }
 
-  if (!checkTool("whois")) return { error: "whois_not_available" };
-
-  const out = runCmd(`whois ${domain}`);
-
-  if (!out || out.error) {
-    log.error(`WHOIS command failed for ${domain}: ${out ? out.message : "No output"}`);
-    return { error: "whois_failed" };
+  if (checkTool("sslyze")) {
+    log.info(`Running SSLyze on ${domain}...`);
+    const sslyzeFile = path.join(outDir, "sslyze.json");
+    runCmd(`sslyze --json_out=${sslyzeFile} ${domain}`, 300000);
+    if (fs.existsSync(sslyzeFile)) {
+      try {
+        results.sslyze = JSON.parse(fs.readFileSync(sslyzeFile));
+      } catch (e) {
+        log.warn("Failed to parse sslyze.json");
+      }
+    }
   }
 
-  return { raw: out };
-}
-
-// ================= TLS =================
-function tlsInfo(domain) {
-  if (!checkTool("openssl")) return null;
-
-  const out = runCmd(
-    `echo | openssl s_client -connect ${domain}:443 -servername ${domain} 2>/dev/null | openssl x509 -noout -issuer -subject -dates`
-  );
-
-  if (!out || out.error) {
-    return "tls_failed";
-  }
-
-  return out;
+  return Object.keys(results).length > 0 ? results : "tls_scan_failed";
 }
 
 // ================= WHATWEB =================
@@ -406,9 +418,9 @@ async function main() {
       },
       domain,
       domain_dossier: {
-        dns: digRecords(domain),
-        whois: await whoisLookup(domain),
-        tls: tlsInfo(domain)
+        dns: dnsxLookup(domain),
+        rdap: await rdapLookup(domain),
+        tls: await tlsAnalysis(domain, outDir)
       },
       technologies: techResults,
       assets

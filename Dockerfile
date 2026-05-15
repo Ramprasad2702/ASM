@@ -42,7 +42,13 @@ RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto && \
 RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
     go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
+    go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest && \
     go install github.com/tomnomnom/assetfinder@latest
+
+# Install SSL/TLS Tools
+RUN git clone --depth 1 https://github.com/drwetter/testssl.sh.git /opt/testssl.sh && \
+    ln -sf /opt/testssl.sh/testssl.sh /usr/local/bin/testssl.sh && \
+    pip3 install --break-system-packages sslyze
 
 # Compatibility symlink
 RUN ln -sf /root/go/bin/httpx /root/go/bin/httpx-toolkit
@@ -55,6 +61,9 @@ RUN subfinder -version && \
     httpx -version && \
     whatweb --version && \
     nuclei -version && \
+    dnsx -version && \
+    testssl.sh --version && \
+    sslyze -h && \
     nmap --version 
 
 # App directory
