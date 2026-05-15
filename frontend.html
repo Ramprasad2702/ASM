@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASM Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -15,6 +16,10 @@
     --text-secondary: #94A3B8;
     --accent-blue: #38BDF8;
     --active-item: #172542;
+    --critical: #3E2723;
+    --high: #EF4444;
+    --medium: #F59E0B;
+    --low: #10B981;
   }
 
   body, html {
@@ -234,10 +239,38 @@
   }
   .stat-icon svg { width: 24px; height: 24px; }
   
-  .url-icon { background: rgba(56, 189, 248, 0.1); color: #38BDF8; }
-  .ip-icon { background: rgba(167, 139, 250, 0.1); color: #A78BFA; }
-  .pulse-icon { background: rgba(251, 146, 60, 0.1); color: #FB923C; }
-  .risk-icon { background: rgba(244, 63, 94, 0.1); color: #F43F5E; }
+  .badge.risk-low { background: rgba(16, 185, 129, 0.1); color: var(--low); }
+  .badge.risk-medium { background: rgba(245, 158, 11, 0.1); color: var(--medium); }
+  .badge.risk-high { background: rgba(239, 68, 68, 0.1); color: var(--high); }
+  .badge.risk-critical { background: rgba(62, 39, 35, 0.1); color: var(--critical); }
+
+  .dashboard-charts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .dashboard-charts {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .chart-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .chart-container {
+    height: 300px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
   .stat-details {
     display: flex;
@@ -613,7 +646,23 @@
           </div>
         </div>
 
-        <div id="critical-findings-section" style="display: none;">
+        <div class="dashboard-charts">
+          <div class="chart-card">
+            <h3 class="section-title">Severity Distribution</h3>
+            <div class="chart-container">
+              <canvas id="severityChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3 class="section-title">Security Posture</h3>
+            <div class="chart-container" style="flex-direction: column; text-align: center;">
+              <div id="risk-score-display" style="font-size: 3rem; font-weight: 700; color: var(--accent-blue);">0</div>
+              <div style="color: var(--text-secondary);">Average Risk Score</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="critical-findings-section" style="display: none; margin-top: 2rem;">
           <h3 class="section-title">Critical & High Findings</h3>
           <div id="critical-findings-container"></div>
         </div>
@@ -794,6 +843,54 @@
     }
   }
 
+  let severityChart = null;
+
+  function updateSeverityChart(findings) {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+    findings.forEach(f => {
+      const s = (f.severity || 'low').toLowerCase();
+      if (counts.hasOwnProperty(s)) counts[s]++;
+    });
+
+    const ctx = document.getElementById('severityChart').getContext('2d');
+    
+    if (severityChart) {
+      severityChart.destroy();
+    }
+
+    severityChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{
+          data: [counts.critical, counts.high, counts.medium, counts.low],
+          backgroundColor: ['#3E2723', '#EF4444', '#F59E0B', '#10B981'],
+          borderColor: '#0B1221',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { color: '#94A3B8', padding: 20, font: { family: 'Inter', size: 12 } }
+          },
+          tooltip: {
+            backgroundColor: '#0B1221',
+            titleColor: '#F8FAFC',
+            bodyColor: '#94A3B8',
+            borderColor: '#1E293B',
+            borderWidth: 1
+          }
+        },
+        cutout: '70%'
+      }
+    });
+  }
+
   function renderDashboard(data) {
     // Hide loading, show dashboard
     document.getElementById('loading-view').style.display = 'none';
@@ -817,7 +914,7 @@
     else riskEl.classList.add('risk-critical');
 
     // Render MITRE
-    const mitreHits = (basic.virustotal_domain && basic.virustotal_domain.mitre_mapping) ? basic.virustotal_domain.mitre_mapping : [];
+    const mitreHits = threat.advanced_intel?.mitre_techniques || basic.virustotal_domain?.mitre_mapping || [];
     if (mitreHits.length > 0) {
       const mitreHtml = mitreHits.map(m => `
         <div class="mitre-card">
@@ -832,7 +929,7 @@
     }
 
     // Render OTX Pulses
-    const pulses = (basic.otx_domain && basic.otx_domain.pulses) ? basic.otx_domain.pulses : [];
+    const pulses = basic.otx_domain?.pulses || [];
     if (pulses.length > 0) {
       document.getElementById('otx-tbody').innerHTML = pulses.map(p => `
         <tr>
@@ -884,6 +981,10 @@
     else if (finalRisk === 'MEDIUM') { dashRiskEl.classList.add('risk-medium'); dashRiskIcon.classList.add('pulse-icon'); }
     else if (finalRisk === 'HIGH') { dashRiskEl.classList.add('risk-high'); dashRiskIcon.classList.add('risk-icon'); }
     else { dashRiskEl.classList.add('risk-critical'); dashRiskIcon.classList.add('risk-icon'); }
+
+    // --- CHART UPDATE ---
+    updateSeverityChart(vulnFindings);
+    document.getElementById('risk-score-display').innerText = (data.final_risk && data.final_risk.score) ? data.final_risk.score : 0;
 
     // CRITICAL FINDINGS SUMMARY
     const criticalFindings = vulnFindings.filter(f => ['critical', 'high'].includes((f.severity || '').toLowerCase()));
