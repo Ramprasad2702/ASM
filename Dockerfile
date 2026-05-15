@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
     libxml-writer-perl \
     libnet-ssleay-perl \
     libwhisker2-perl \
+    bsdmainutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
