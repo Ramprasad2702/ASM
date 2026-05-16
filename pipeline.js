@@ -62,6 +62,7 @@ async function runPipeline(target) {
   const domain = assets.domain || target;
   const ips = assets.assets.ips || [];
   const urls = assets.assets.urls || [];
+  const subdomains = assets.assets.subdomains || [];
 
   // ================= STEP 3: THREAT ANALYSIS =================
   console.log("[PIPELINE] Running Threat Intelligence Analysis...");
@@ -78,7 +79,10 @@ async function runPipeline(target) {
     target,
     recon,
     recon_summary: {
+      subdomains: subdomains.length,
+      subdomains_list: subdomains,
       ips: ips.length,
+      ips_list: ips,
       urls: urls.length,
       urls_list: urls
     },
