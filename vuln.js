@@ -84,7 +84,7 @@ function initReport(dir, domain) {
 
 // ================= INFRASTRUCTURE ANALYSIS =================
 async function runInfrastructureAnalysis(domain, dir) {
-  updateState(dir, "infrastructure_scan", 45, "Initiating infrastructure analysis...");
+  updateState(dir, "infrastructure_scan", 45, "Running Nmap service discovery (this may take up to 20 mins)...");
 
   console.log(`[VULN] Analyzing service exposures on ${domain}...`);
   await runCmd(
