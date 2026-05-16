@@ -444,10 +444,75 @@
     gap: 10px;
   }
   .endpoint-badge {
-    background: rgba(56, 189, 248, 0.1);
-    color: var(--accent-blue);
-    padding: 2px 8px;
     border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* BRAND FINDINGS */
+  .finding-card {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .finding-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+  .finding-card.risk-high::before { background: var(--high); }
+  .finding-card.risk-medium::before { background: var(--medium); }
+  .finding-card.risk-low::before { background: var(--low); }
+
+  .finding-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    background: rgba(30, 41, 59, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+  .finding-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+  .finding-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    flex: 1;
+  }
+  .finding-tool-tag {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  .finding-desc {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
     font-size: 0.8rem;
   }
   .endpoint-content {
@@ -1747,16 +1812,19 @@
       return;
     }
 
-    container.innerHTML = findings.sort((a,b) => a.severity === 'CRITICAL' ? -1 : 1).map(f => {
+    container.innerHTML = findings.sort((a,b) => {
+      const order = { 'CRITICAL': 0, 'WARNING': 1, 'INFO': 2 };
+      return order[a.severity] - order[b.severity];
+    }).map(f => {
       const sevClass = f.severity === 'CRITICAL' ? 'risk-high' : f.severity === 'WARNING' ? 'risk-medium' : 'risk-low';
       return `
-        <div class="finding-card">
+        <div class="finding-card ${sevClass}">
           <div class="finding-header">
             <span class="badge ${sevClass}">${f.severity}</span>
             <span class="finding-title">${f.title}</span>
-            <span class="badge" style="margin-left:auto;background:var(--surface);color:var(--text-secondary)">${f.tool}</span>
+            <span class="finding-tool-tag">${f.tool}</span>
           </div>
-          <p class="finding-desc" style="white-space:pre-wrap; margin-top:0.5rem; font-family:monospace; font-size:0.85rem;">${f.detail}</p>
+          <pre class="finding-desc">${f.detail}</pre>
         </div>
       `;
     }).join('');
