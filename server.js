@@ -100,11 +100,11 @@ const app = express();
       if (fs.existsSync(reportPath)) {
           try {
               const content = JSON.parse(fs.readFileSync(reportPath));
-              data.target = content.target || data.target;
-              data.risk = content.final_risk?.level || "UNKNOWN";
-              data.assets = (content.recon_summary?.urls || 0) + (content.recon_summary?.ips || 0);
-              data.vulns = content.vulnerability?.findings?.length || 0;
-              data.timestamp = content.generated_at || data.timestamp;
+              data.target = content.domain || data.target;
+              data.risk = content.risk?.level || "LOW";
+              data.assets = (content.recon?.assets?.urls?.length || 0) + (content.recon?.assets?.ips?.length || 0);
+              data.vulns = content.findings?.length || 0;
+              data.timestamp = content.__meta__?.timestamp || data.timestamp;
           } catch (e) {}
       }
       return data;
