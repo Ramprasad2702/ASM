@@ -62,7 +62,6 @@ RUN subfinder -version && \
     nuclei -version && \
     dnsx -version && \
     testssl.sh --version && \
-    sslyze -h && \
     nmap --version 
 
 # App directory
