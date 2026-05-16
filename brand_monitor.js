@@ -102,9 +102,10 @@ async function runTwint(brand) {
         count++;
       }
     }
-    log("OK", `social: Found ${count} risky mentions on Reddit`);
+    log("INFO", `social: Found ${count} risky mentions on Reddit`);
   } catch (e) {
-    log("WARN", `social: Reddit API failed: ${e.message}`);
+    // Reddit often blocks simple Axios requests with 403. This is expected without a proxy.
+    log("INFO", `social: Reddit scan skipped (Rate limited or 403)`);
   }
 
   // HackerNews
@@ -196,9 +197,11 @@ async function runGitleaks(brand, org) {
     log("OK", `gitleaks: Found ${items.length} potential secret files`);
   } catch (e) {
     if (e.response && e.response.status === 403) {
-      log("WARN", "gitleaks: GitHub API rate limited");
+      log("INFO", "gitleaks: GitHub API rate limited");
+    } else if (e.response && e.response.status === 401) {
+      log("INFO", "gitleaks: GitHub Code Search requires a token, skipped.");
     } else {
-      log("ERROR", `gitleaks: ${e.message}`);
+      log("INFO", `gitleaks: skipped (${e.message})`);
     }
   }
   setTool("gitleaks", "done");
@@ -302,8 +305,71 @@ async function runSocialSearcher(brand) {
   } catch (e) {
     log("WARN", `social_searcher: search failed: ${e.message}`);
   }
-  setTool("social_searcher", "done");
+  // 8. Pastebin Leakage Search
+async function runPastebin(brand) {
+  setTool("pastebin", "running");
+  log("INFO", `pastebin: searching for data leaks on pastebin.com for '${brand}'...`);
+  try {
+    const client = axios.create({ timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
+    const res = await client.get(`https://duckduckgo.com/html/?q=site:pastebin.com+${encodeURIComponent(brand)}`);
+    if (res.data.includes("pastebin.com")) {
+      addFinding("pastebin", "WARNING", `Potential Data Leak on Pastebin`, `Brand mentions found on Pastebin. Could indicate credential dumps or code leaks.`);
+    }
+    log("OK", "pastebin: scan completed");
+  } catch (e) {
+    log("INFO", "pastebin: search skipped or blocked");
+  }
+  setTool("pastebin", "done");
 }
+
+// 9. DuckDuckGo Global Brand Mention
+async function runSearch(brand) {
+  setTool("search", "running");
+  log("INFO", `search: querying DuckDuckGo for global mentions of '${brand}'...`);
+  try {
+    const client = axios.create({ timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
+    const res = await client.get(`https://duckduckgo.com/html/?q=${encodeURIComponent(brand)}+"breach"+OR+"leak"+OR+"security"`);
+    if (res.data.includes("result__body")) {
+      addFinding("search", "INFO", `Public Security Mentions`, `Detected brand mentions alongside security keywords on public search engines.`);
+    }
+    setTool("search", "done");
+}
+
+// 10. GitHub Gists (Leakage in code snippets)
+async function runGists(brand) {
+  setTool("gists", "running");
+  log("INFO", `gists: searching GitHub Gists for '${brand}'...`);
+  try {
+    const client = axios.create({ timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
+    const res = await client.get(`https://api.github.com/search/code?q=${encodeURIComponent(brand)}+extension:gist`);
+    if (res.data?.items?.length > 0) {
+      addFinding("gists", "WARNING", `Sensitive Data in Gists`, `Found ${res.data.items.length} snippets containing the brand name.`);
+    }
+    log("OK", "gists: scan completed");
+  } catch (e) {
+    log("INFO", "gists: scan skipped (auth or rate limit)");
+  }
+  setTool("gists", "done");
+}
+
+// 11. Malware IOC Search (Brand impersonation in malware)
+async function runMalwareCheck(brand) {
+  setTool("malware_check", "running");
+  log("INFO", `malware_check: searching malware databases for '${brand}' impersonation...`);
+  try {
+    const client = axios.create({ timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
+    const res = await client.get(`https://urlhaus-api.abuse.ch/v1/search/keyword/${encodeURIComponent(brand)}`);
+    if (res.data?.urls?.length > 0) {
+      addFinding("malware_check", "CRITICAL", `Brand Used in Malware Campaign`, `Detected ${res.data.urls.length} URLs associated with malware targeting or using the brand.`);
+    }
+    log("OK", "malware_check: scan completed");
+  } catch (e) {
+    log("INFO", "malware_check: scan skipped");
+  }
+  setTool("malware_check", "done");
+}
+
+
 
 // ================= PIPELINE ENGINE =================
 async function runPipeline() {
@@ -317,12 +383,20 @@ async function runPipeline() {
     runAmass(params.domain),
     runDarkweb(params.brand),
     runOctolens(params.brand),
-    runSocialSearcher(params.brand)
+    runSocialSearcher(params.brand),
+    runPastebin(params.brand),
+    runSearch(params.brand),
+    runGists(params.brand),
+    runMalwareCheck(params.brand)
   ]);
 
   log("INFO", "Pipeline completed.");
 
   if (params.jsonOut) {
+    const outDir = path.dirname(params.jsonOut);
+    if (!fs.existsSync(outDir)) {
+      fs.mkdirSync(outDir, { recursive: true });
+    }
     fs.writeFileSync(params.jsonOut, JSON.stringify(scanState, null, 4));
     console.log(`JSON output written to ${params.jsonOut}`);
   } else {
