@@ -150,6 +150,33 @@
     height: 100%;
   }
 
+  /* LOADERS & SPINNERS */
+  .loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: var(--accent-blue);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    margin-bottom: 20px;
+  }
+
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(56, 189, 248, 0.2);
+    border-top-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: rotation 1s linear infinite;
+  }
+
+  @keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
   .sidebar {
     width: 260px;
     background-color: var(--bg-sidebar);
@@ -611,6 +638,14 @@
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
+
+      <div id="persistent-loading-indicator" style="display: none; background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent-blue); padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; align-items: center; gap: 15px;">
+        <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>
+        <div style="flex: 1;">
+          <h4 style="margin: 0; color: var(--accent-blue); font-size: 0.95rem;">Scan in Progress...</h4>
+          <span id="persistent-loading-text" style="font-size: 0.85rem; color: var(--text-secondary);">Analyzing target...</span>
+        </div>
+      </div>
       
       <!-- Threat Intel Tab -->
       <div id="tab-threat" class="tab-content" style="display: block;">
