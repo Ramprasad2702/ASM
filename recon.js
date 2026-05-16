@@ -337,6 +337,10 @@ async function main() {
         subs = [domain];
       } else {
         log.info(`Consolidated unique assets: ${subs.length}`);
+        if (subs.length > 500) {
+          log.warn(`Target has too many subdomains (${subs.length}). Capping to 500 to prevent OOM.`);
+          subs = subs.slice(0, 500);
+        }
       }
     }
 
@@ -347,8 +351,8 @@ async function main() {
     fs.writeFileSync(subsFile, subs.join("\n"));
 
     log.info("Verifying live endpoints...");
-    // -ip flag gets the IP, -silent for clean output
-    const httpxOut = runCmd(`httpx-toolkit -l ${subsFile} -ip -silent`, 120000);
+    // Throttled httpx to prevent connection/memory blowout on Railway
+    const httpxOut = runCmd(`httpx-toolkit -l "${subsFile}" -ip -silent -t 20 -c 30 -rl 50`, 240000);
 
     const assets = {
       subdomains: [],

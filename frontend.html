@@ -893,7 +893,22 @@
         <div class="content-header">
           <h2 class="content-title">Brand Monitoring</h2>
         </div>
-        <p class="empty-state">Monitoring target brand presence across malicious domains, phishing kits, and deep/dark web sources.</p>
+        <div class="scan-controls" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center;">
+          <input type="text" id="brand-input" class="search-input" placeholder="Brand Name (e.g. acme)" style="flex: 1;">
+          <input type="text" id="brand-domain-input" class="search-input" placeholder="Domain (optional)" style="flex: 1;">
+          <button id="brand-scan-btn" class="scan-button" onclick="startBrandScan()">
+            Start Brand Scan
+          </button>
+        </div>
+        <div id="brand-loading" style="display: none; text-align: center; padding: 2rem;">
+          <div class="spinner" style="margin: 0 auto;"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Running brand intelligence scan... This may take a few minutes.</p>
+        </div>
+        <div id="brand-results" style="display: none;">
+          <div class="stats-grid" id="brand-stats" style="margin-bottom: 2rem;"></div>
+          <h3 class="section-title">Brand Findings</h3>
+          <div id="brand-findings-container"></div>
+        </div>
       </div>
 
       <!-- Scan History Tab -->
@@ -973,9 +988,16 @@
     }
   }
 
+  
+  let reconLoaded = false;
+  let vulnLoaded = false;
+
   async function pollResults(target) {
     const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
     
+    reconLoaded = false;
+    vulnLoaded = false;
+
     const interval = setInterval(async () => {
       try {
         // Poll for progress state
@@ -984,15 +1006,49 @@
           const state = await statusRes.json();
           document.getElementById('progress-bar').style.width = `${state.progress}%`;
           document.getElementById('loading-status').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
+          document.getElementById('persistent-loading-text').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
         }
 
-        // Looking for unified_report.json which signifies the entire pipeline finished
-        const res = await fetch(`/results/${safeTarget}/unified_report.json`);
-        
-        if (res.ok) {
-          clearInterval(interval);
-          const data = await res.json();
-          renderDashboard(data);
+        // Recon
+        if (!reconLoaded) {
+          const reconRes = await fetch(`/results/${safeTarget}/recon.json`);
+          if (reconRes.ok) {
+            reconLoaded = true;
+            const reconData = await reconRes.json();
+            
+            document.getElementById('loading-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            document.getElementById('persistent-loading-indicator').style.display = 'flex';
+            
+            renderDashboard({ recon: reconData }); // Partial render
+            switchTab('tab-assets');
+          }
+        }
+
+        // Vuln
+        if (reconLoaded && !vulnLoaded) {
+          const vulnRes = await fetch(`/results/${safeTarget}/final_report.json`);
+          if (vulnRes.ok) {
+            vulnLoaded = true;
+            const vulnData = await vulnRes.json();
+            
+            // We pass a partial unified report object so renderDashboard doesn't fail
+            // It will update vuln parts and overwrite recon parts (which is fine)
+            renderDashboard({ recon: { assets: { subdomains: [], ips: [], urls: []} }, vulnerability: vulnData });
+            switchTab('tab-vuln');
+          }
+        }
+
+        // Unified (End)
+        if (vulnLoaded) {
+          const res = await fetch(`/results/${safeTarget}/unified_report.json`);
+          if (res.ok) {
+            clearInterval(interval);
+            document.getElementById('persistent-loading-indicator').style.display = 'none';
+            const data = await res.json();
+            renderDashboard(data);
+            switchTab('tab-dashboard');
+          }
         }
       } catch (e) {
         // Still processing
@@ -1232,7 +1288,7 @@
     }
 
     // --- Dashboard Overview ---
-    const recon = data.recon_summary || {};
+    const recon = data.recon_summary || (data.recon ? data.recon.assets : {}) || {};
     const vuln = data.vulnerability || {};
     const finalRisk = (data.final_risk && data.final_risk.level) ? data.final_risk.level.toUpperCase() : 'LOW';
 
@@ -1260,7 +1316,7 @@
     else { dashRiskEl.classList.add('risk-critical'); dashRiskIcon.classList.add('risk-icon'); }
 
     // --- CHART UPDATE ---
-    updateCharts(vulnFindings);
+    if(vulnFindings.length > 0) updateCharts(vulnFindings);
 
     // CRITICAL FINDINGS SUMMARY
     const criticalFindings = vulnFindings.filter(f => ['critical', 'high'].includes((f.severity || '').toLowerCase()));
@@ -1287,9 +1343,9 @@
     // recon.json stores DNS/TLS/RDAP under domain_dossier
     const dossier = reconData.domain_dossier || {};
     const reconAssetData = reconData.assets || {};
-    const subdomainsList = recon.subdomains_list || reconAssetData.subdomains || [];
-    const ipsList = recon.ips_list || reconAssetData.ips || [];
-    const allUrls = recon.urls_list || reconAssetData.urls || [];
+    const subdomainsList = recon.subdomains_list || (data.recon && data.recon.assets ? data.recon.assets.subdomains : []) || reconAssetData.subdomains || [];
+    const ipsList = recon.ips_list || (data.recon && data.recon.assets ? data.recon.assets.ips : []) || reconAssetData.ips || [];
+    const allUrls = recon.urls_list || (data.recon && data.recon.assets ? data.recon.assets.urls : []) || reconAssetData.urls || [];
 
     // Asset count stat cards
     document.getElementById('asset-subdomain-count').innerText = subdomainsList.length;
@@ -1586,6 +1642,89 @@
       alert(err.message);
       switchTab('tab-history');
     }
+  }
+
+  async function startBrandScan() {
+    const brand = document.getElementById('brand-input').value.trim();
+    const domain = document.getElementById('brand-domain-input').value.trim();
+    
+    if (!brand) return alert('Please enter a brand name');
+
+    // UI Transition
+    document.getElementById('brand-scan-btn').disabled = true;
+    document.getElementById('brand-scan-btn').innerText = 'Scanning...';
+    document.getElementById('brand-results').style.display = 'none';
+    document.getElementById('brand-loading').style.display = 'block';
+
+    try {
+      const url = `/scan/brand?brand=${encodeURIComponent(brand)}` + (domain ? `&domain=${encodeURIComponent(domain)}` : '');
+      const res = await fetch(url);
+      
+      if (!res.ok) throw new Error('Brand scan failed');
+      
+      const data = await res.json();
+      renderBrandResults(data);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      document.getElementById('brand-scan-btn').disabled = false;
+      document.getElementById('brand-scan-btn').innerText = 'Start Brand Scan';
+      document.getElementById('brand-loading').style.display = 'none';
+    }
+  }
+
+  function renderBrandResults(data) {
+    document.getElementById('brand-results').style.display = 'block';
+    const findings = data.findings || [];
+    
+    // Stats
+    const critical = findings.filter(f => f.severity === 'CRITICAL').length;
+    const warning = findings.filter(f => f.severity === 'WARNING').length;
+    
+    document.getElementById('brand-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon risk-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+        <div class="stat-details">
+          <span class="stat-label">Total Findings</span>
+          <span class="stat-value">${findings.length}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pulse-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+        <div class="stat-details">
+          <span class="stat-label">Critical</span>
+          <span class="stat-value" style="color: var(--danger)">${critical}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon url-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+        <div class="stat-details">
+          <span class="stat-label">Warnings</span>
+          <span class="stat-value" style="color: var(--warning)">${warning}</span>
+        </div>
+      </div>
+    `;
+
+    // Findings
+    const container = document.getElementById('brand-findings-container');
+    if (findings.length === 0) {
+      container.innerHTML = '<div class="empty-state">No brand risks found.</div>';
+      return;
+    }
+
+    container.innerHTML = findings.sort((a,b) => a.severity === 'CRITICAL' ? -1 : 1).map(f => {
+      const sevClass = f.severity === 'CRITICAL' ? 'risk-high' : f.severity === 'WARNING' ? 'risk-medium' : 'risk-low';
+      return \`
+        <div class="finding-card">
+          <div class="finding-header">
+            <span class="badge \${sevClass}">\${f.severity}</span>
+            <span class="finding-title">\${f.title}</span>
+            <span class="badge" style="margin-left:auto;background:var(--surface);color:var(--text-secondary)">\${f.tool}</span>
+          </div>
+          <p class="finding-desc" style="white-space:pre-wrap; margin-top:0.5rem; font-family:monospace; font-size:0.85rem;">\${f.detail}</p>
+        </div>
+      \`;
+    }).join('');
   }
 
 </script>

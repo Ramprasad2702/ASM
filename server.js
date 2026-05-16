@@ -2,27 +2,9 @@ const express = require("express");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
-const cluster = require("cluster");
-const os = require("os");
-
 const PORT = process.env.PORT || 3000;
 
-if (cluster.isPrimary) {
-  const numCPUs = os.cpus().length;
-  console.log(`[MASTER] Master process ${process.pid} is running`);
-  console.log(`[MASTER] Forking ${numCPUs} workers...`);
-
-  // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on("exit", (worker, code, signal) => {
-    console.log(`[MASTER] Worker ${worker.process.pid} died. Forking a new one...`);
-    cluster.fork();
-  });
-} else {
-  const app = express();
+const app = express();
 
   // Serve static files
   app.use(express.static(__dirname));
@@ -131,8 +113,52 @@ if (cluster.isPrimary) {
     res.json(history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
   });
 
-  // Start server
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[WORKER ${process.pid}] Server running at http://0.0.0.0:${PORT}`);
+  // Brand Scan initiation endpoint
+  app.get("/scan/brand", (req, res) => {
+    const brand = req.query.brand;
+    const domain = req.query.domain || "";
+    
+    if (!brand) {
+      return res.status(400).json({ error: "Brand required" });
+    }
+
+    const safeBrand = brand.replace(/[^a-z0-9.-]/gi, "_");
+    const resultsDir = path.join(__dirname, "results", safeBrand);
+    if (!fs.existsSync(resultsDir)) {
+      fs.mkdirSync(resultsDir, { recursive: true });
+    }
+
+    const outJsonPath = path.join(resultsDir, "brand.json");
+    
+    let args = ["brand_monitor.js", "--brand", brand, "--json-out", outJsonPath];
+    if (domain) {
+      args.push("--domain");
+      args.push(domain);
+    }
+
+    const child = spawn("node", args, {
+      cwd: __dirname
+    });
+
+    let output = "";
+    child.stdout.on("data", data => output += data.toString());
+    child.stderr.on("data", data => output += data.toString());
+
+    child.on("close", code => {
+      if (fs.existsSync(outJsonPath)) {
+        try {
+          const report = JSON.parse(fs.readFileSync(outJsonPath, "utf-8"));
+          res.json(report);
+        } catch (e) {
+          res.status(500).json({ error: "Failed to parse brand monitor output", details: output });
+        }
+      } else {
+        res.status(500).json({ error: "Brand monitor failed to produce output", details: output });
+      }
+    });
   });
-}
+
+// Start server
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`[SERVER] Server running at http://0.0.0.0:${PORT}`);
+});

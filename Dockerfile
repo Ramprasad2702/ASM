@@ -18,8 +18,7 @@ RUN apt-get update && apt-get install -y \
     openssl \
     whatweb \
     nmap \
-    python3 \
-    python3-pip \
+    dnstwist \
     build-essential \
     ca-certificates \
     perl \
@@ -48,8 +47,7 @@ RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && 
 
 # Install SSL/TLS Tools
 RUN git clone --depth 1 https://github.com/drwetter/testssl.sh.git /opt/testssl.sh && \
-    ln -sf /opt/testssl.sh/testssl.sh /usr/local/bin/testssl.sh && \
-    pip3 install --break-system-packages sslyze
+    ln -sf /opt/testssl.sh/testssl.sh /usr/local/bin/testssl.sh
 
 # Compatibility symlink
 RUN ln -sf /root/go/bin/httpx /root/go/bin/httpx-toolkit
