@@ -84,7 +84,7 @@ function initReport(dir, domain) {
 
 // ================= INFRASTRUCTURE ANALYSIS =================
 async function runInfrastructureAnalysis(domain, dir) {
-  updateState(dir, "infrastructure_scan", 20, "Initiating infrastructure analysis...");
+  updateState(dir, "infrastructure_scan", 45, "Initiating infrastructure analysis...");
 
   console.log(`[VULN] Analyzing service exposures on ${domain}...`);
   await runCmd(
@@ -94,7 +94,7 @@ async function runInfrastructureAnalysis(domain, dir) {
   );
   console.log(`[VULN] Service analysis completed for ${domain}`);
 
-  updateState(dir, "infrastructure_done", 40, "Infrastructure analysis complete");
+  updateState(dir, "infrastructure_done", 65, "Infrastructure analysis complete");
 }
 
 function parseInfrastructureResults(dir, cves) {
@@ -479,7 +479,7 @@ async function main() {
   const domain = data.domain;
 
   initReport(dir, domain);
-  updateState(dir, "init", 5, "Initialized");
+  updateState(dir, "vuln_init", 40, "Vulnerability scan starting...");
 
   // SEQUENTIAL EXECUTION to prevent OOM on Railway (running Nmap, Nuclei, Nikto together crashes 500MB containers)
   const cves = new Set();

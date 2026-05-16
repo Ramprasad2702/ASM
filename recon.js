@@ -344,8 +344,8 @@ async function main() {
       }
     }
 
-    // ===== ASSET DISCOVERY WITH HTTPX =====
-    updateState(outDir, "asset_discovery", 12, "Verifying asset availability...");
+    // Progress: 10% -> 40% in recon
+    updateState(outDir, "asset_discovery", 15, "Verifying asset availability...");
 
     const subsFile = path.join(outDir, "subs_to_check.txt");
     fs.writeFileSync(subsFile, subs.join("\n"));
@@ -402,10 +402,10 @@ async function main() {
       `Assets → subs=${assets.subdomains.length}, ips=${assets.ips.length}, urls=${assets.urls.length}`
     );
 
-    updateState(outDir, "recon_dns_tls", 15, `Resolved ${assets.ips.length} assets. Performing DNS/TLS checks...`);
+    updateState(outDir, "recon_dns_tls", 30, `Resolved ${assets.ips.length} assets. Performing DNS/TLS checks...`);
 
     // ===== WHATWEB =====
-    updateState(outDir, "tech_discovery", 18, "Identifying web technologies...");
+    updateState(outDir, "tech_discovery", 40, "Identifying web technologies...");
     const techResults = {};
     const urlsToScan = assets.urls.slice(0, 5); // Limit to top 5 for speed
     for (const url of urlsToScan) {

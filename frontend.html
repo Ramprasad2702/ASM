@@ -707,7 +707,13 @@
       <div id="persistent-loading-indicator" style="display: none; background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent-blue); padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; align-items: center; gap: 15px;">
         <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>
         <div style="flex: 1;">
-          <h4 style="margin: 0; color: var(--accent-blue); font-size: 0.95rem;">Scan in Progress...</h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <h4 style="margin: 0; color: var(--accent-blue); font-size: 0.95rem;">Scan in Progress...</h4>
+            <span id="persistent-progress-text" style="font-size: 0.8rem; color: var(--accent-blue); font-weight: 600;">0%</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: rgba(56, 189, 248, 0.1); border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
+            <div id="persistent-progress-bar" style="width: 0%; height: 100%; background: var(--accent-blue); transition: width 0.5s ease;"></div>
+          </div>
           <span id="persistent-loading-text" style="font-size: 0.85rem; color: var(--text-secondary);">Analyzing target...</span>
         </div>
       </div>
@@ -1104,7 +1110,16 @@
         const statusRes = await fetch(`/results/${safeTarget}/scan_state.json`);
         if (statusRes.ok) {
           const state = await statusRes.json();
-          document.getElementById('progress-bar').style.width = `${state.progress}%`;
+          const progress = state.progress || 0;
+          
+          if (document.getElementById('progress-bar')) {
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+          }
+          if (document.getElementById('persistent-progress-bar')) {
+            document.getElementById('persistent-progress-bar').style.width = `${progress}%`;
+            document.getElementById('persistent-progress-text').innerText = `${progress}%`;
+          }
+          
           document.getElementById('loading-status').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
           document.getElementById('persistent-loading-text').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
         }
