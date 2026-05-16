@@ -1749,16 +1749,16 @@
 
     container.innerHTML = findings.sort((a,b) => a.severity === 'CRITICAL' ? -1 : 1).map(f => {
       const sevClass = f.severity === 'CRITICAL' ? 'risk-high' : f.severity === 'WARNING' ? 'risk-medium' : 'risk-low';
-      return \`
+      return `
         <div class="finding-card">
           <div class="finding-header">
-            <span class="badge \${sevClass}">\${f.severity}</span>
-            <span class="finding-title">\${f.title}</span>
-            <span class="badge" style="margin-left:auto;background:var(--surface);color:var(--text-secondary)">\${f.tool}</span>
+            <span class="badge ${sevClass}">${f.severity}</span>
+            <span class="finding-title">${f.title}</span>
+            <span class="badge" style="margin-left:auto;background:var(--surface);color:var(--text-secondary)">${f.tool}</span>
           </div>
-          <p class="finding-desc" style="white-space:pre-wrap; margin-top:0.5rem; font-family:monospace; font-size:0.85rem;">\${f.detail}</p>
+          <p class="finding-desc" style="white-space:pre-wrap; margin-top:0.5rem; font-family:monospace; font-size:0.85rem;">${f.detail}</p>
         </div>
-      \`;
+      `;
     }).join('');
   }
 
