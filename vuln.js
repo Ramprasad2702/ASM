@@ -47,10 +47,13 @@ function runCmd(cmd, timeout = 600000) { // Default 10 mins
     const timer = setTimeout(() => {
       console.log(`[TIMEOUT] Killing process after ${timeout}ms: ${cmd}`);
       try {
-        // Kill the process group (minus sign before PID)
-        process.kill(-p.pid, "SIGKILL");
+        if (process.platform === "win32") {
+          p.kill("SIGKILL");
+        } else {
+          process.kill(-p.pid, "SIGKILL");
+        }
       } catch (e) {
-        p.kill();
+        p.kill("SIGKILL");
       }
     }, timeout);
 
@@ -85,8 +88,9 @@ async function runInfrastructureAnalysis(domain, dir) {
 
   console.log(`[VULN] Analyzing service exposures on ${domain}...`);
   await runCmd(
-    `nmap -sT -T4 --min-rate 500 -sV -sC --script vuln -p ${IMPORTANT_PORTS} ${domain} -oN ${dir}/nmap.txt`,
-    1200000 // 20 min timeout for nmap
+    // Removed --min-rate 500 to prevent Railway firewalls from dropping all packets. Kept -sV -sC --script vuln for CVE detection.
+    `nmap -sT -T3 -sV -sC --script vuln -p ${IMPORTANT_PORTS} ${domain} -oN "${dir}/nmap.txt"`,
+    1800000 // 30 min timeout for nmap to allow full script scan
   );
   console.log(`[VULN] Service analysis completed for ${domain}`);
 
@@ -304,7 +308,8 @@ async function runEngine(urls, dir) {
   //   -etags info = also include informational findings (technologies, etc.)
   console.log(`[VULN] Security engine processing ${normalizedUrls.length} targets...`);
   const result = await runCmd(
-    `nuclei -l ${file} ${templateArgs} -c 100 -bs 25 -rl 300 -mhe 50 -ss host-spray -duc -timeout 5 -retries 0 -jle ${dir}/nuclei.jsonl 2>&1`,
+    // Lowered concurrency (-c 20 instead of 100) to prevent Out of Memory crashes on Railway
+    `nuclei -l ${file} ${templateArgs} -c 20 -bs 10 -rl 100 -mhe 20 -ss host-spray -duc -timeout 5 -retries 0 -jle ${dir}/nuclei.jsonl 2>&1`,
     2400000
   );
   // Log the first 500 chars of output for debugging
@@ -476,14 +481,12 @@ async function main() {
   initReport(dir, domain);
   updateState(dir, "init", 5, "Initialized");
 
-  // CONCURRENT EXECUTION to maximize speed
+  // SEQUENTIAL EXECUTION to prevent OOM on Railway (running Nmap, Nuclei, Nikto together crashes 500MB containers)
   const cves = new Set();
 
-  const [_, __, webFindings] = await Promise.all([
-    runInfrastructureAnalysis(domain, dir),
-    runEngine(urls, dir),
-    runWebAnalysis(urls, dir)
-  ]);
+  await runInfrastructureAnalysis(domain, dir);
+  await runEngine(urls, dir);
+  const webFindings = await runWebAnalysis(urls, dir);
 
   const services = parseInfrastructureResults(dir, cves);
   const infraFindings = extractInfrastructureFindings(services, cves);
