@@ -1821,19 +1821,41 @@
 
     try {
       const url = `/scan/brand?brand=${encodeURIComponent(brand)}` + (domain ? `&domain=${encodeURIComponent(domain)}` : '');
-      const res = await fetch(url);
+      const startRes = await fetch(url);
+      if (!startRes.ok) throw new Error('Failed to initiate brand scan');
       
-      if (!res.ok) throw new Error('Brand scan failed');
-      
-      const data = await res.json();
-      renderBrandResults(data);
+      // Polling logic
+      let attempts = 0;
+      const maxAttempts = 60; // 3 minutes
+      const poll = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await fetch(`/results/brand/${encodeURIComponent(brand)}`);
+          if (res.ok) {
+            clearInterval(poll);
+            const data = await res.json();
+            renderBrandResults(data);
+            cleanup();
+          } else if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            alert('Brand scan timed out. Results may appear in History later.');
+            cleanup();
+          }
+        } catch (e) {}
+      }, 3000);
+
+      function cleanup() {
+        document.getElementById('brand-scan-btn').disabled = false;
+        document.getElementById('brand-scan-btn').innerText = 'Start Brand Scan';
+        document.getElementById('brand-loading').style.display = 'none';
+      }
     } catch (err) {
       alert(err.message);
-    } finally {
       document.getElementById('brand-scan-btn').disabled = false;
       document.getElementById('brand-scan-btn').innerText = 'Start Brand Scan';
       document.getElementById('brand-loading').style.display = 'none';
     }
+
   }
 
   function renderBrandResults(data) {

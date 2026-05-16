@@ -137,26 +137,33 @@ const app = express();
     }
 
     const child = spawn("node", args, {
-      cwd: __dirname
+      cwd: __dirname,
+      detached: true,
+      stdio: "ignore"
     });
+    child.unref();
 
-    let output = "";
-    child.stdout.on("data", data => output += data.toString());
-    child.stderr.on("data", data => output += data.toString());
-
-    child.on("close", code => {
-      if (fs.existsSync(outJsonPath)) {
-        try {
-          const report = JSON.parse(fs.readFileSync(outJsonPath, "utf-8"));
-          res.json(report);
-        } catch (e) {
-          res.status(500).json({ error: "Failed to parse brand monitor output", details: output });
-        }
-      } else {
-        res.status(500).json({ error: "Brand monitor failed to produce output", details: output });
-      }
-    });
+    res.json({ status: "started", target: brand, message: "Brand intelligence scan initiated." });
   });
+
+  // Result retrieval endpoint (for polling)
+  app.get("/results/brand/:brand", (req, res) => {
+    const brand = req.params.brand;
+    const safeBrand = brand.replace(/[^a-z0-9.-]/gi, "_");
+    const outJsonPath = path.join(__dirname, "results", safeBrand, "brand.json");
+
+    if (fs.existsSync(outJsonPath)) {
+        try {
+            const report = JSON.parse(fs.readFileSync(outJsonPath, "utf-8"));
+            res.json(report);
+        } catch (e) {
+            res.status(500).json({ error: "Failed to parse report" });
+        }
+    } else {
+        res.status(404).json({ error: "Still scanning..." });
+    }
+  });
+
 
 // Start server
 app.listen(PORT, "0.0.0.0", () => {

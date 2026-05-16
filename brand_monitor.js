@@ -58,13 +58,14 @@ function addFinding(tool, severity, title, detail, raw = null) {
   });
 }
 
-function runCmd(cmd, timeoutMs = 120000) {
+function runCmd(cmd, timeoutMs = 60000) {
   return new Promise((resolve) => {
     exec(cmd, { timeout: timeoutMs }, (error, stdout, stderr) => {
       resolve({ error, stdout: stdout || "", stderr: stderr || "" });
     });
   });
 }
+
 
 // ================= MODULES =================
 
@@ -78,7 +79,8 @@ async function runTwint(brand) {
     "WARNING": ["vulnerability", "exploit", "phishing", "scam", "malware", "fraud"]
   };
 
-  const client = axios.create({ timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
+  const client = axios.create({ timeout: 8000, headers: { "User-Agent": "Mozilla/5.0" } });
+
 
   // Reddit
   try {
