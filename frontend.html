@@ -16,7 +16,7 @@
     --text-secondary: #94A3B8;
     --accent-blue: #38BDF8;
     --active-item: #172542;
-    --critical: #3E2723;
+    --critical: #FF6B6B;
     --high: #EF4444;
     --medium: #F59E0B;
     --low: #10B981;
@@ -473,6 +473,84 @@
   .critical-name { font-weight: 600; color: #F8FAFC; }
   .critical-endpoint { font-size: 0.85rem; color: var(--text-secondary); }
 
+  /* STAT CARD ALIGNMENT — ensure consistent height and no overflow */
+  .stat-card {
+    min-height: 80px;
+    box-sizing: border-box;
+  }
+  .stat-details {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .stat-value {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* STATS GRID — 4-column cap on wide screens for the summary cards */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  @media (min-width: 1280px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* TABLE OVERFLOW — prevent tables from breaking layout */
+  .data-table {
+    table-layout: fixed;
+    word-break: break-word;
+  }
+  .data-table td, .data-table th {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* SECTION TITLE — consistent spacing */
+  .section-title {
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+  }
+
+  /* MAIN CONTENT — reduce padding on smaller screens */
+  @media (max-width: 1200px) {
+    .main-content {
+      padding: 30px 30px;
+    }
+  }
+  @media (max-width: 900px) {
+    .main-content {
+      padding: 20px 16px;
+    }
+    .sidebar {
+      width: 220px;
+    }
+    .main-content {
+      margin-left: 220px;
+    }
+  }
+
+  /* VULN TAB — ensure endpoint groups don't overflow */
+  .endpoint-title {
+    word-break: break-all;
+    max-width: 70%;
+  }
+
+  /* SUBDOMAINS TABLE — fixed column widths */
+  #subdomains-table {
+    table-layout: fixed;
+  }
+  #subdomains-table th:nth-child(1),
+  #subdomains-table td:nth-child(1) { width: 50px; }
+  #subdomains-table th:nth-child(2),
+  #subdomains-table td:nth-child(2) { width: 30%; }
+  #subdomains-table th:nth-child(3),
+  #subdomains-table td:nth-child(3) { width: 20%; }
+  #subdomains-table th:nth-child(4),
+  #subdomains-table td:nth-child(4) { width: auto; }
+
 </style>
 </head>
 <body>
@@ -580,6 +658,7 @@
               <span class="stat-value badge risk-low" id="val-risk">LOW</span>
             </div>
           </div>
+        </div>
 
         <div id="domain-intel-section" style="display: none; margin-bottom: 30px;">
           <h3 class="section-title">Domain Intelligence</h3>
@@ -703,7 +782,58 @@
         <div class="content-header">
           <h2 class="content-title">Asset Discovery</h2>
         </div>
-        
+
+        <!-- Summary stat cards for asset counts -->
+        <div class="stats-grid" id="asset-stats-grid" style="margin-bottom: 30px;">
+          <div class="stat-card">
+            <div class="stat-icon url-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Subdomains</span>
+              <span class="stat-value" id="asset-subdomain-count">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon ip-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Resolved IPs</span>
+              <span class="stat-value" id="asset-ip-count">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon pulse-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Live URLs</span>
+              <span class="stat-value" id="asset-url-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subdomains Table -->
+        <div id="subdomains-section">
+          <h3 class="section-title">Discovered Subdomains</h3>
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="subdomains-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Subdomain</th>
+                  <th>IP Address</th>
+                  <th>Live URL</th>
+                </tr>
+              </thead>
+              <tbody id="subdomains-tbody">
+                <tr><td colspan="4" class="empty-state">No subdomains discovered.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div id="dns-section">
           <h3 class="section-title">DNS Records</h3>
           <div id="dns-container" class="stats-grid">
@@ -736,7 +866,7 @@
         </div>
 
         <div id="whois-section">
-          <h3 class="section-title">WHOIS Information</h3>
+          <h3 class="section-title">WHOIS / RDAP Information</h3>
           <div id="whois-container">
             <div class="empty-state">No WHOIS data available.</div>
           </div>
@@ -907,7 +1037,7 @@
         labels: ['Critical', 'High', 'Medium', 'Low'],
         datasets: [{
           data: [sevCounts.critical, sevCounts.high, sevCounts.medium, sevCounts.low],
-          backgroundColor: ['#3E2723', '#EF4444', '#F59E0B', '#10B981'],
+          backgroundColor: ['#FF6B6B', '#EF4444', '#F59E0B', '#10B981'],
           borderColor: '#0B1221',
           borderWidth: 2
         }]
@@ -1101,12 +1231,16 @@
       `).join('');
     }
 
-    // --- NEW: Dashboard Overview ---
+    // --- Dashboard Overview ---
     const recon = data.recon_summary || {};
     const vuln = data.vulnerability || {};
     const finalRisk = (data.final_risk && data.final_risk.level) ? data.final_risk.level.toUpperCase() : 'LOW';
-    
-    const totalAssets = (recon.urls || 0) + (recon.ips || 0);
+
+    // Total assets = subdomains + IPs (prefer recon_summary counts, fall back to recon.assets)
+    const reconAssets = data.recon?.assets || {};
+    const totalSubdomains = recon.subdomains || (reconAssets.subdomains ? reconAssets.subdomains.length : 0);
+    const totalIPs = recon.ips || (reconAssets.ips ? reconAssets.ips.length : 0);
+    const totalAssets = totalSubdomains + totalIPs;
     document.getElementById('dash-assets').innerText = totalAssets;
     
     const portsCount = (vuln.attack_surface && vuln.attack_surface.services) ? vuln.attack_surface.services.length : 0;
@@ -1150,11 +1284,43 @@
 
     // --- Asset Discovery Tab Updates ---
     const reconData = data.recon || {};
-    const allUrls = data.recon_summary?.urls_list || [];
-    
-    // DNS Records
-    if (reconData.dns) {
-      const dnsHtml = Object.entries(reconData.dns).map(([type, records]) => {
+    // recon.json stores DNS/TLS/RDAP under domain_dossier
+    const dossier = reconData.domain_dossier || {};
+    const reconAssetData = reconData.assets || {};
+    const subdomainsList = recon.subdomains_list || reconAssetData.subdomains || [];
+    const ipsList = recon.ips_list || reconAssetData.ips || [];
+    const allUrls = recon.urls_list || reconAssetData.urls || [];
+
+    // Asset count stat cards
+    document.getElementById('asset-subdomain-count').innerText = subdomainsList.length;
+    document.getElementById('asset-ip-count').innerText = ipsList.length;
+    document.getElementById('asset-url-count').innerText = allUrls.length;
+
+    // Subdomains table — cross-reference subdomains with IPs and URLs
+    if (subdomainsList.length > 0) {
+      const subRows = subdomainsList.map((sub, idx) => {
+        // Find matching IP: look for an IP that was discovered alongside this subdomain
+        const matchedIp = ipsList[idx] || '';
+        // Find a live URL for this subdomain
+        const matchedUrl = allUrls.find(u => {
+          try { return new URL(u).hostname === sub; } catch { return false; }
+        }) || '';
+        return `
+          <tr>
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">${idx + 1}</td>
+            <td style="color: var(--text-primary); font-weight: 500;">${sub}</td>
+            <td style="color: var(--accent-blue); font-family: monospace; font-size: 0.9rem;">${matchedIp || '<span style="color:var(--text-secondary)">—</span>'}</td>
+            <td style="font-size: 0.85rem;">${matchedUrl ? `<a href="${matchedUrl}" target="_blank" style="color: var(--accent-blue); text-decoration: none;">${matchedUrl}</a>` : '<span style="color:var(--text-secondary)">—</span>'}</td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('subdomains-tbody').innerHTML = subRows;
+    }
+
+    // DNS Records — data lives at recon.domain_dossier.dns
+    const dnsRecords = dossier.dns || {};
+    if (Object.keys(dnsRecords).length > 0) {
+      const dnsHtml = Object.entries(dnsRecords).map(([type, records]) => {
         if (!records || records.length === 0) return '';
         return `
           <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
@@ -1166,31 +1332,32 @@
       if (dnsHtml) document.getElementById('dns-container').innerHTML = dnsHtml;
     }
 
-    // TLS Info (testssl.sh & SSLyze)
-    if (reconData.tls) {
+    // TLS Info — data lives at recon.domain_dossier.tls
+    const tlsData = dossier.tls;
+    if (tlsData) {
       const tlsContent = document.getElementById('tls-container');
-      if (reconData.tls === 'tls_failed' || reconData.tls === 'tls_scan_failed') {
+      if (tlsData === 'tls_failed' || tlsData === 'tls_scan_failed') {
         tlsContent.innerHTML = `
-          <div class="empty-state" style="color: var(--risk-high); padding: 20px;">
+          <div class="empty-state" style="color: var(--high); padding: 20px;">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="margin-bottom: 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             SSL/TLS certificate retrieval failed. The host may not be serving HTTPS or the connection timed out.
           </div>
         `;
       } else {
-        const tlsData = typeof reconData.tls === 'string' ? reconData.tls : JSON.stringify(reconData.tls, null, 2);
+        const tlsStr = typeof tlsData === 'string' ? tlsData : JSON.stringify(tlsData, null, 2);
         tlsContent.innerHTML = `
-          <div class="finding-detail" style="border-left-color: #38BDF8; max-height: 500px; overflow-y: auto;">${tlsData}</div>
+          <div class="finding-detail" style="border-left-color: #38BDF8; max-height: 500px; overflow-y: auto;">${tlsStr}</div>
         `;
       }
     }
 
-    // WHOIS / RDAP Info
-    const regData = reconData.rdap || reconData.whois;
+    // WHOIS / RDAP Info — data lives at recon.domain_dossier.rdap
+    const regData = dossier.rdap || dossier.whois;
     if (regData) {
       const whoisContent = document.getElementById('whois-container');
       if (regData.error) {
         whoisContent.innerHTML = `
-          <div class="empty-state" style="color: var(--risk-high);">
+          <div class="empty-state" style="color: var(--high);">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="margin-bottom: 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             Registration lookup failed for this domain.
           </div>
@@ -1203,31 +1370,7 @@
       }
     }
 
-    if (allUrls.length > 0) {
-      const urlsHtml = `
-        <h3 class="section-title">Discovered Assets & URLs</h3>
-        <div class="stats-grid">
-          ${allUrls.map(u => `
-            <div class="stat-card" style="padding: 12px 15px; border-radius: 8px;">
-              <div class="stat-icon url-icon" style="width: 32px; height: 32px;"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
-              <div style="font-size: 0.9rem; color: var(--text-primary); word-break: break-all;">${u}</div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-      const assetTab = document.getElementById('tab-assets');
-      if (!document.getElementById('urls-section')) {
-         const div = document.createElement('div');
-         div.id = 'urls-section';
-         div.innerHTML = urlsHtml;
-         // Insert before WHOIS
-         assetTab.insertBefore(div, document.getElementById('whois-section'));
-      } else {
-         document.getElementById('urls-section').innerHTML = urlsHtml;
-      }
-    }
-
-    // --- NEW: Asset Discovery (Geo & Services) ---
+    // --- Asset Discovery (Geo & Services) ---
     if (vuln.geo && Object.keys(vuln.geo).length > 0) {
       const geoHtml = Object.keys(vuln.geo).map(ip => {
         const info = vuln.geo[ip];
@@ -1244,20 +1387,35 @@
 
     // Open Services (Nmap / attack surface)
     if (vuln.attack_surface && vuln.attack_surface.services && vuln.attack_surface.services.length > 0) {
-      const servicesHtml = vuln.attack_surface.services.map(svc => `
-        <div class="supply-card">
-          <div class="supply-domain">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            ${svc.ip || svc.host || 'Unknown Host'}
-          </div>
-          <div class="supply-asn">
-            <span class="asn-tag">Port ${svc.port || 'N/A'}</span>
-            <span class="country-tag">${svc.service || svc.name || 'Unknown'}</span>
-            ${svc.version ? `<span class="asn-tag">${svc.version}</span>` : ''}
-          </div>
+      const scanDomain = vuln.domain || data.target || '';
+      const openServices = vuln.attack_surface.services.filter(svc => svc.state === 'open' || !svc.state);
+      const servicesHtml = `
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Port</th>
+                <th>State</th>
+                <th>Service</th>
+                <th>Version</th>
+                <th>Host</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${openServices.map(svc => `
+                <tr>
+                  <td style="color: var(--accent-blue); font-family: monospace; font-weight: 600;">${svc.port || 'N/A'}</td>
+                  <td><span class="badge ${svc.state === 'open' ? 'risk-low' : 'risk-medium'}" style="font-size:0.75rem;">${svc.state || 'open'}</span></td>
+                  <td style="color: var(--text-primary);">${svc.service || 'unknown'}</td>
+                  <td style="color: var(--text-secondary); font-size: 0.85rem;">${svc.version || '—'}</td>
+                  <td style="color: var(--text-secondary); font-size: 0.85rem;">${svc.ip || svc.host || scanDomain || '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
-      `).join('');
-      if (servicesHtml) document.getElementById('services-container').innerHTML = servicesHtml;
+      `;
+      document.getElementById('services-container').innerHTML = servicesHtml;
     }
 
     // Technology Stack (WhatWeb)
