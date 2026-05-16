@@ -1515,9 +1515,27 @@
           </div>
         `;
       } else {
-        const tlsStr = typeof tlsData === 'string' ? tlsData : JSON.stringify(tlsData, null, 2);
+        const tls = tlsData || {};
+        const sslyze = tls.sslyze?.server_scan_results?.[0]?.connectivity_result || {};
         tlsContent.innerHTML = `
-          <div class="finding-detail" style="border-left-color: #38BDF8; max-height: 500px; overflow-y: auto;">${tlsStr}</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%;">
+            <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+              <div class="stat-label">TLS Protocol</div>
+              <div class="stat-value" style="font-size: 1.1rem; color: var(--low);">${sslyze.highest_tls_version_supported || 'TLS 1.3'}</div>
+            </div>
+            <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+              <div class="stat-label">Cipher Suite</div>
+              <div class="stat-value" style="font-size: 0.85rem; word-break: break-all;">${sslyze.cipher_suite_supported || 'N/A'}</div>
+            </div>
+            <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+              <div class="stat-label">HSTS Status</div>
+              <div class="stat-value" style="font-size: 1rem; color: ${sslyze.supports_hsts ? 'var(--low)' : 'var(--warning)'}">${sslyze.supports_hsts ? 'ENABLED' : 'DISABLED'}</div>
+            </div>
+          </div>
+          <details style="margin-top: 15px; width: 100%;">
+            <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px;">View Full TLS Analysis Report</summary>
+            <pre class="raw-data" style="margin-top: 10px; max-height: 300px; overflow-y: auto;">${JSON.stringify(tls, null, 2)}</pre>
+          </details>
         `;
       }
     }
@@ -1534,9 +1552,26 @@
           </div>
         `;
       } else {
-        const regRaw = regData.raw || JSON.stringify(regData, null, 2);
+        const rdap = regData || {};
         whoisContent.innerHTML = `
-          <div class="finding-detail" style="border-left-color: #A78BFA; max-height: 400px; overflow-y: auto;">${regRaw}</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%;">
+            <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+              <div class="stat-label">Registrar</div>
+              <div class="stat-value" style="font-size: 1rem;">${rdap.entities?.[0]?.vcardArray?.[1]?.[1]?.[3] || rdap.handle || 'N/A'}</div>
+            </div>
+            <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+              <div class="stat-label">Domain Status</div>
+              <div class="stat-value" style="font-size: 0.95rem; color: var(--low);">${Array.isArray(rdap.status) ? rdap.status[0] : 'ACTIVE'}</div>
+            </div>
+            <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
+              <div class="stat-label">LDH Name</div>
+              <div class="stat-value" style="font-size: 1rem;">${rdap.ldhName || 'N/A'}</div>
+            </div>
+          </div>
+          <details style="margin-top: 15px; width: 100%;">
+            <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px;">View Raw RDAP/WHOIS JSON</summary>
+            <pre class="raw-data" style="margin-top: 10px; max-height: 300px; overflow-y: auto;">${JSON.stringify(rdap, null, 2)}</pre>
+          </details>
         `;
       }
     }
@@ -1591,12 +1626,23 @@
 
     // Technology Stack (WhatWeb)
     if (reconData.technologies) {
-      const techHtml = Object.entries(reconData.technologies).map(([url, output]) => `
-        <div class="stat-card" style="flex-direction: column; align-items: flex-start; padding: 15px;">
-          <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 5px; font-size: 0.85rem; word-break: break-all;">${url}</div>
-          <div style="color: var(--text-secondary); font-size: 0.85rem;">${output}</div>
-        </div>
-      `).join('');
+      const techHtml = Object.entries(reconData.technologies).map(([url, tech]) => {
+        const tags = tech.split(',').map(t => t.trim());
+        const server = tags.find(t => t.includes('HTTPServer'))?.match(/\[(.*?)\]/)?.[1] || 'N/A';
+        const country = tags.find(t => t.includes('Country'))?.match(/\[(.*?)\]/)?.[1] || 'N/A';
+        const app = tags.find(t => !t.includes('HTTPServer') && !t.includes('IP') && !t.includes('Country') && !t.includes('Title')) || 'N/A';
+        
+        return `
+          <div class="tech-card" style="border-left: 3px solid var(--accent-blue);">
+            <h4 style="color: var(--accent-blue); margin: 0 0 10px 0; font-size: 0.95rem; word-break: break-all;">${url}</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+              <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); border: none;">Server: ${server}</span>
+              <span class="badge" style="background: rgba(167, 139, 250, 0.1); color: #A78BFA; border: none;">${country}</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin: 0;">${tech.substring(0, 250)}${tech.length > 250 ? '...' : ''}</p>
+          </div>
+        `;
+      }).join('');
       if (techHtml) document.getElementById('tech-container').innerHTML = techHtml;
     }
 
