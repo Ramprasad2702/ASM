@@ -88,8 +88,8 @@ async function runInfrastructureAnalysis(domain, dir) {
 
   console.log(`[VULN] Analyzing service exposures on ${domain}...`);
   await runCmd(
-    // Removed --min-rate 500 to prevent Railway firewalls from dropping all packets. Kept -sV -sC --script vuln for CVE detection.
-    `nmap -sT -T3 -sV -sC --script vuln -p ${IMPORTANT_PORTS} ${domain} -oN "${dir}/nmap.txt"`,
+    // Added -Pn to skip host discovery, -sT for connect scan (no root), and -T3 for stability.
+    `nmap -sT -Pn -T3 -sV -sC --script vuln -p ${IMPORTANT_PORTS} ${domain} -oN "${dir}/nmap.txt"`,
     1800000 // 30 min timeout for nmap to allow full script scan
   );
   console.log(`[VULN] Service analysis completed for ${domain}`);

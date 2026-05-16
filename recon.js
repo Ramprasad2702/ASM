@@ -212,8 +212,8 @@ function dnsxLookup(domain) {
   const types = ["a", "aaaa", "mx", "txt", "cname", "ns"];
 
   for (let type of types) {
-    const out = runCmd(`dnsx -d ${domain} -${type} -resp-only -silent`);
-    if (out && !out.error) {
+    const out = runCmd(`echo ${domain} | dnsx -${type} -resp-only -silent`);
+    if (out && !out.error && typeof out === 'string') {
       records[type.toUpperCase()] = out.split("\n").map(s => s.trim()).filter(Boolean);
     }
   }
