@@ -9,15 +9,12 @@ const axios = require("axios");
 const FINAL_REPORT = "final_report.json";
 const STATE_FILE = "scan_state.json";
 
-const IMPORTANT_PORTS = "21-23,25,53,80,81,88,110,111,135,139,143,443,445,548,587,631,636,873,990,993,995,1025-1029,1110,1433,1723,2000,2049,2121,3000,3128,3306,3389,3986,4848,5000,5060,5432,5666,5800,5900,6000,6001,6646,7070,8000,8008,8009,8080,8081,8443,8888,9000,9100,9999";
+const IMPORTANT_PORTS = "21,22,23,25,53,80,110,135,139,143,443,445,587,993,995,1433,1723,2049,3000,3306,3389,5432,5900,6379,8000,8080,8443,8888,9000";
 
 const NUCLEI_TEMPLATES = [
   "http/cves",
   "http/vulnerabilities",
-  "http/exposures",
-  "http/misconfiguration",
-  "http/technologies",
-  "http/exposed-panels"
+  "http/misconfiguration"
 ];
 
 // ================= UTILS =================
@@ -84,13 +81,13 @@ function initReport(dir, domain) {
 
 // ================= INFRASTRUCTURE ANALYSIS =================
 async function runInfrastructureAnalysis(domain, dir) {
-  updateState(dir, "infrastructure_scan", 45, "Running Nmap service discovery (this may take up to 20 mins)...");
+  updateState(dir, "infrastructure_scan", 45, "Running Nmap service discovery (this may take up to 5 mins)...");
 
   console.log(`[VULN] Analyzing service exposures on ${domain}...`);
   await runCmd(
-    // Added -Pn to skip host discovery, -sT for connect scan (no root), and -T3 for stability.
-    `nmap -sT -Pn -T3 -sV -sC --script vuln -p ${IMPORTANT_PORTS} ${domain} -oN "${dir}/nmap.txt"`,
-    1800000 // 30 min timeout for nmap to allow full script scan
+    // -sS SYN stealth scan (faster than -sT), -T5 insane timing, -sV version detection only (no -sC scripts)
+    `nmap -sS -Pn -T5 -sV -p ${IMPORTANT_PORTS} ${domain} -oN "${dir}/nmap.txt"`,
+    300000 // 5 min timeout
   );
   console.log(`[VULN] Service analysis completed for ${domain}`);
 
@@ -308,9 +305,9 @@ async function runEngine(urls, dir) {
   //   -etags info = also include informational findings (technologies, etc.)
   console.log(`[VULN] Security engine processing ${normalizedUrls.length} targets...`);
   const result = await runCmd(
-    // Lowered concurrency (-c 20 instead of 100) to prevent Out of Memory crashes on Railway
-    `nuclei -l ${file} ${templateArgs} -c 20 -bs 10 -rl 100 -mhe 20 -ss host-spray -duc -timeout 5 -retries 0 -jle ${dir}/nuclei.jsonl 2>&1`,
-    2400000
+    // -c 50 concurrency, reduced template set, 10 min timeout
+    `nuclei -l ${file} ${templateArgs} -c 50 -bs 10 -rl 100 -mhe 20 -ss host-spray -duc -timeout 5 -retries 0 -jle ${dir}/nuclei.jsonl 2>&1`,
+    600000
   );
   // Log the first 500 chars of output for debugging
   const preview = result.output.substring(0, 500).replace(/\n/g, " ");
@@ -362,35 +359,38 @@ function parseEngineResults(dir, cves) {
 }
 
 // ================= WEB ANALYSIS =================
+// Nikto removed: nuclei already covers web vulnerabilities and nikto added ~5 min per URL.
+// Set ENABLE_NIKTO=true to re-enable for deep scans on a single URL.
 async function runWebAnalysis(urls, dir) {
-  updateState(dir, "web_analysis", 75, "Performing web layer analysis...");
+  if (process.env.ENABLE_NIKTO !== "true") {
+    console.log("[VULN] Nikto web analysis skipped (set ENABLE_NIKTO=true to enable)");
+    return [];
+  }
+
+  updateState(dir, "web_analysis", 75, "Performing web layer analysis (nikto)...");
 
   const findings = [];
-  const CONCURRENCY = 2; // Limited concurrency for Nikto to avoid "cracking" the site
-  
-  for (let i = 0; i < urls.length; i += CONCURRENCY) {
-    const chunk = urls.slice(i, i + CONCURRENCY);
-    console.log(`[VULN] Analyzing web headers and configurations...`);
-    
-    await Promise.all(chunk.map(async (url) => {
-      const res = await runCmd(`nikto -h ${url} -Tuning 123 -nointeractive`, 900000); // 15 min timeout, skip heavy tests
-      
-      const lines = res.output.split("\n");
-      lines.forEach(line => {
-        if (line.startsWith("+ ") && !line.match(/^\+ (Target|Server:|Multiple IPs|No CGI|Start Time:|End Time:|Scan terminated|1 host\(s\)|Your Analysis|Platform:|Scanner v)/)) {
-          findings.push({
-            source: "Web Analysis",
-            name: line.substring(2, 50).trim() + "...",
-            description: line.substring(2).trim(),
-            severity: "medium",
-            url: url,
-            owasp: mapToOwasp(line.substring(2, 50).trim(), line.substring(2).trim())
-          });
-        }
+  // Run on first URL only to cap time
+  const target = urls[0];
+  if (!target) return findings;
+
+  console.log(`[VULN] Analyzing web headers and configurations for ${target}...`);
+  const res = await runCmd(`nikto -h ${target} -Tuning 123 -nointeractive`, 900000); // 15 min timeout
+
+  const lines = res.output.split("\n");
+  lines.forEach(line => {
+    if (line.startsWith("+ ") && !line.match(/^\+ (Target|Server:|Multiple IPs|No CGI|Start Time:|End Time:|Scan terminated|1 host\(s\)|Your Analysis|Platform:|Scanner v)/)) {
+      findings.push({
+        source: "Web Analysis",
+        name: line.substring(2, 50).trim() + "...",
+        description: line.substring(2).trim(),
+        severity: "medium",
+        url: target,
+        owasp: mapToOwasp(line.substring(2, 50).trim(), line.substring(2).trim())
       });
-      console.log(`[VULN] Web analysis finished for ${url}`);
-    }));
-  }
+    }
+  });
+  console.log(`[VULN] Web analysis finished for ${target}`);
 
   updateState(dir, "web_analysis_done", 85, "Web layer analysis complete");
   return findings;

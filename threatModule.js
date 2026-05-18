@@ -10,7 +10,7 @@ const ABUSEIPDB_API_KEY = process.env.ABUSEIPDB_API_KEY;
 const VT_API_KEY       = process.env.VT_API_KEY;
 const URLSCAN_API_KEY  = process.env.URLSCAN_API_KEY; // optional
 
-const TIMEOUT = 12000;
+const TIMEOUT = 5000;
 
 // ================= MITRE =================
 const MITRE_KEYWORDS = {
@@ -350,7 +350,7 @@ async function runThreatIntel(domain, ips = [], urls = []) {
   }
 
   // --- IP enrichment: Intelligence Sources ---
-  for (let ip of ips.slice(0, 5)) {
+  for (let ip of ips.slice(0, 2)) {
     console.log(`[THREAT] IP enrichment for ${ip}...`);
     const [otxIp, abuseData, shodanData] = await Promise.all([
       otxLookup(`https://otx.alienvault.com/api/v1/indicators/IPv4/${ip}/general`),
@@ -364,13 +364,13 @@ async function runThreatIntel(domain, ips = [], urls = []) {
     }
   }
 
-  // --- URL enrichment: VT + URLscan submit (if key exists) ---
-  for (let url of urls.slice(0, 3)) {
+  // --- URL enrichment: VT only (URLscan submit skipped by default to save time) ---
+  for (let url of urls.slice(0, 1)) {
     console.log(`[THREAT] URL enrichment for ${url}...`);
     const encoded = Buffer.from(url).toString("base64").replace(/=+$/, "");
     const [vtUrl, urlscanFull] = await Promise.all([
       vtLookup(`https://www.virustotal.com/api/v3/urls/${encoded}`),
-      urlscanSubmit(url) // skipped if no API key
+      process.env.ENABLE_URLSCAN_SUBMIT === "true" ? urlscanSubmit(url) : Promise.resolve({})
     ]);
 
     const supply = extractSupplyChain(urlscanFull);

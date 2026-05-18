@@ -240,32 +240,26 @@ async function rdapLookup(domain) {
   }
 }
 
-// ================= TLS ANALYSIS (testssl.sh & SSLyze) =================
+// ================= TLS ANALYSIS (testssl.sh) =================
+// Skipped by default to save ~3 minutes. Set ENABLE_TLS_DEEP_SCAN=true to enable.
+// SSLyze removed (duplicate of testssl.sh).
 async function tlsAnalysis(domain, outDir) {
+  if (process.env.ENABLE_TLS_DEEP_SCAN !== "true") {
+    log.info("TLS deep scan skipped (set ENABLE_TLS_DEEP_SCAN=true to enable)");
+    return "tls_scan_skipped";
+  }
+
   const results = {};
 
   if (checkTool("testssl.sh")) {
-    log.info(`Running testssl.sh on ${domain}...`);
+    log.info(`Running testssl.sh --fast on ${domain}...`);
     const testsslFile = path.join(outDir, "testssl.json");
-    runCmd(`testssl.sh --jsonfile ${testsslFile} --quiet --nodns none ${domain}`, 300000);
+    runCmd(`testssl.sh --fast --jsonfile ${testsslFile} --quiet --nodns none ${domain}`, 300000);
     if (fs.existsSync(testsslFile)) {
       try {
         results.testssl = JSON.parse(fs.readFileSync(testsslFile));
       } catch (e) {
         log.warn("Failed to parse testssl.json");
-      }
-    }
-  }
-
-  if (checkTool("sslyze")) {
-    log.info(`Running SSLyze on ${domain}...`);
-    const sslyzeFile = path.join(outDir, "sslyze.json");
-    runCmd(`sslyze --json_out=${sslyzeFile} ${domain}`, 300000);
-    if (fs.existsSync(sslyzeFile)) {
-      try {
-        results.sslyze = JSON.parse(fs.readFileSync(sslyzeFile));
-      } catch (e) {
-        log.warn("Failed to parse sslyze.json");
       }
     }
   }

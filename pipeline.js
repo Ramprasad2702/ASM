@@ -36,9 +36,21 @@ async function runPipeline(target) {
 
   console.log("[PIPELINE] Asset Discovery completed\n");
 
-  // ================= STEP 2: SECURITY ANALYSIS =================
-  console.log("[PIPELINE] Initiating Security Analysis...");
-  await runNode("vuln.js", [assetsPath]);
+  // ================= LOAD ASSETS =================
+  const assets = JSON.parse(fs.readFileSync(assetsPath));
+  const domain = assets.domain || target;
+  const ips = assets.assets.ips || [];
+  const urls = assets.assets.urls || [];
+  const subdomains = assets.assets.subdomains || [];
+
+  // ================= STEP 2: SECURITY ANALYSIS + THREAT INTEL (parallel) =================
+  // Threat intel has no dependency on vuln output, so run both concurrently.
+  console.log("[PIPELINE] Initiating Security Analysis and Threat Intelligence in parallel...");
+
+  const [, intel] = await Promise.all([
+    runNode("vuln.js", [assetsPath]),
+    runThreatIntel(domain, ips, urls)
+  ]);
 
   const vulnPath = path.join(dir, "final_report.json");
 
@@ -47,31 +59,18 @@ async function runPipeline(target) {
     return;
   }
 
-  console.log("[PIPELINE] Security Analysis completed\n");
+  console.log("[PIPELINE] Security Analysis and Threat Intelligence completed\n");
 
-  // ================= LOAD DATA =================
-  const assets = JSON.parse(fs.readFileSync(assetsPath));
+  // ================= LOAD VULN DATA =================
   const vuln = JSON.parse(fs.readFileSync(vulnPath));
-  
+
   let recon = {};
   const reconJsonPath = path.join(dir, "recon.json");
   if (fs.existsSync(reconJsonPath)) {
     recon = JSON.parse(fs.readFileSync(reconJsonPath));
   }
 
-  const domain = assets.domain || target;
-  const ips = assets.assets.ips || [];
-  const urls = assets.assets.urls || [];
-  const subdomains = assets.assets.subdomains || [];
-
-  // ================= STEP 3: THREAT ANALYSIS =================
-  console.log("[PIPELINE] Running Threat Intelligence Analysis...");
-
-  const intel = await runThreatIntel(domain, ips, urls);
-
-  console.log("[PIPELINE] Threat Intelligence Analysis completed\n");
-
-  // ================= STEP 4: FINAL RISK =================
+  // ================= STEP 3: FINAL RISK =================
 
   const finalRisk = combineRisk(vuln, intel);
 
