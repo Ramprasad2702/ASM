@@ -171,7 +171,7 @@ const app = express();
             res.status(500).json({ error: "Failed to parse report" });
         }
     } else {
-        res.status(404).json({ error: "Still scanning..." });
+        res.json({ status: "scanning", message: "Still scanning..." });
     }
   });
 

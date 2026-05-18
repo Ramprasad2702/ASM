@@ -307,7 +307,10 @@ async function runSocialSearcher(brand) {
   } catch (e) {
     log("WARN", `social_searcher: search failed: ${e.message}`);
   }
-  // 8. Pastebin Leakage Search
+  setTool("social_searcher", "done");
+}
+
+// 8. Pastebin Leakage Search
 async function runPastebin(brand) {
   setTool("pastebin", "running");
   log("INFO", `pastebin: searching for data leaks on pastebin.com for '${brand}'...`);
@@ -334,7 +337,10 @@ async function runSearch(brand) {
     if (res.data.includes("result__body")) {
       addFinding("search", "INFO", `Public Security Mentions`, `Detected brand mentions alongside security keywords on public search engines.`);
     }
-    setTool("search", "done");
+  } catch (e) {
+    log("INFO", "search: DuckDuckGo query skipped or blocked");
+  }
+  setTool("search", "done");
 }
 
 // 10. GitHub Gists (Leakage in code snippets)

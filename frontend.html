@@ -1485,6 +1485,7 @@
         if (statusRes.ok) {
           const state = await statusRes.json();
           const progress = state.progress || 0;
+          const stage = state.stage || "";
           
           if (document.getElementById('progress-bar')) {
             document.getElementById('progress-bar').style.width = `${progress}%`;
@@ -1494,46 +1495,46 @@
             document.getElementById('persistent-progress-text').innerText = `${progress}%`;
           }
           
-          document.getElementById('loading-status').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
-          document.getElementById('persistent-loading-text').innerText = `[${state.stage.toUpperCase()}] ${state.message}`;
-        }
+          document.getElementById('loading-status').innerText = `[${stage.toUpperCase()}] ${state.message}`;
+          document.getElementById('persistent-loading-text').innerText = `[${stage.toUpperCase()}] ${state.message}`;
 
-        // Recon
-        if (!reconLoaded) {
-          const reconRes = await fetch(`/results/${safeTarget}/recon.json`);
-          if (reconRes.ok) {
-            reconLoaded = true;
-            const reconData = await reconRes.json();
-            
-            document.getElementById('loading-view').style.display = 'none';
-            document.getElementById('dashboard-view').style.display = 'block';
-            document.getElementById('persistent-loading-indicator').style.display = 'flex';
-            
-            renderDashboard({ recon: reconData }); // Partial render
-            switchTab('tab-assets');
+          // Stage-aware: Only fetch recon.json once we are past the initial subdomain phase
+          if (!reconLoaded && (progress >= 40 || stage === "completed")) {
+            const reconRes = await fetch(`/results/${safeTarget}/recon.json`);
+            if (reconRes.ok) {
+              reconLoaded = true;
+              const reconData = await reconRes.json();
+              
+              document.getElementById('loading-view').style.display = 'none';
+              document.getElementById('dashboard-view').style.display = 'block';
+              document.getElementById('persistent-loading-indicator').style.display = 'flex';
+              
+              renderDashboard({ recon: reconData }); // Partial render
+              switchTab('tab-assets');
+            }
           }
-        }
 
-        // Vuln
-        if (reconLoaded && !vulnLoaded) {
-          const vulnRes = await fetch(`/results/${safeTarget}/final_report.json`);
-          if (vulnRes.ok) {
-            vulnLoaded = true;
-            const vulnData = await vulnRes.json();
-            renderDashboard({ recon: { assets: { subdomains: [], ips: [], urls: []} }, vulnerability: vulnData });
-            switchTab('tab-vuln');
+          // Stage-aware: Only fetch final_report.json once security analysis runs or is completed
+          if (reconLoaded && !vulnLoaded && (progress >= 90 || stage === "completed")) {
+            const vulnRes = await fetch(`/results/${safeTarget}/final_report.json`);
+            if (vulnRes.ok) {
+              vulnLoaded = true;
+              const vulnData = await vulnRes.json();
+              renderDashboard({ recon: { assets: { subdomains: [], ips: [], urls: []} }, vulnerability: vulnData });
+              switchTab('tab-vuln');
+            }
           }
-        }
 
-        // Unified (End)
-        if (vulnLoaded) {
-          const res = await fetch(`/results/${safeTarget}/unified_report.json`);
-          if (res.ok) {
-            clearInterval(interval);
-            document.getElementById('persistent-loading-indicator').style.display = 'none';
-            const data = await res.json();
-            renderDashboard(data);
-            switchTab('tab-dashboard');
+          // Stage-aware: Only fetch unified_report.json once the scan is 100% completed
+          if (vulnLoaded && stage === "completed") {
+            const res = await fetch(`/results/${safeTarget}/unified_report.json`);
+            if (res.ok) {
+              clearInterval(interval);
+              document.getElementById('persistent-loading-indicator').style.display = 'none';
+              const data = await res.json();
+              renderDashboard(data);
+              switchTab('tab-dashboard');
+            }
           }
         }
       } catch (e) {
@@ -2264,10 +2265,12 @@
         try {
           const res = await fetch(`/results/brand/${encodeURIComponent(brand)}`);
           if (res.ok) {
-            clearInterval(poll);
             const data = await res.json();
-            renderBrandResults(data);
-            cleanup();
+            if (data.status !== "scanning") {
+              clearInterval(poll);
+              renderBrandResults(data);
+              cleanup();
+            }
           } else if (attempts >= maxAttempts) {
             clearInterval(poll);
             alert('Brand scan timed out. Results may appear in History later.');
