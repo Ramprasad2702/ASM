@@ -1074,11 +1074,11 @@
         
         <!-- sleek target scan card -->
         <div class="scan-controls">
-          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;">
             <label style="color: #64748b; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Standard Target ASM Scan</label>
-            <input type="text" id="target-input" class="scan-input" placeholder="Enter target domain, IP, or URL (e.g., acme.com)..." autocomplete="off" style="width: 100%;">
+            <input type="text" id="target-input" class="scan-input" placeholder="Enter target domain, IP, or URL (e.g., acme.com)..." autocomplete="off" style="width: 100%; box-sizing: border-box;">
           </div>
-          <button class="scan-button" onclick="startScan()">Start ASM Scan</button>
+          <button class="scan-button" onclick="startScan()" style="flex-shrink: 0;">Start ASM Scan</button>
         </div>
 
         <!-- 4 Metrics cards row -->
