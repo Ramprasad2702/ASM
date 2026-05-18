@@ -25,8 +25,8 @@ async function runPipeline(target) {
   console.log("[PIPELINE] Initializing Asset Discovery...");
   await runNode("recon.js", [target]);
 
-  const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
-  const dir = path.join("results", safeTarget);
+  const safeTarget = process.env.SCAN_ID || target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
+  const dir = process.env.OUTPUT_DIR || path.join("results", safeTarget);
   const assetsPath = path.join(dir, "assets.json");
 
   if (!fs.existsSync(assetsPath)) {

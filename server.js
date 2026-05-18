@@ -29,19 +29,30 @@ const app = express();
       fs.mkdirSync(resultsDir, { recursive: true });
     }
 
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
     const safeTarget = target.replace(/[^a-z0-9.-]/gi, "_").replace(/_{2,}/g, "_").replace(/^_|_$/g, "");
-    const logPath = path.join(resultsDir, `${safeTarget}.log`);
+    const uniqueScanId = `${safeTarget}_${dateStr}`;
+
+    const logPath = path.join(resultsDir, `${uniqueScanId}.log`);
     const logFd = fs.openSync(logPath, "a");
     
-    // Spawn the pipeline in the background
+    // Spawn the pipeline in the background with timestamp-based directories
     const child = spawn("node", ["pipeline.js", target], {
+      cwd: __dirname,
       detached: true,
-      stdio: ["ignore", logFd, logFd]
+      stdio: ["ignore", logFd, logFd],
+      env: {
+        ...process.env,
+        SCAN_ID: uniqueScanId,
+        OUTPUT_DIR: path.join(resultsDir, uniqueScanId)
+      }
     });
 
     child.unref();
 
-    res.json({ status: "started", target, id: safeTarget });
+    res.json({ status: "started", target, id: uniqueScanId });
   });
 
   // Assets endpoint
