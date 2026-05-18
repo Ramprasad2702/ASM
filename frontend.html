@@ -1852,7 +1852,8 @@
     const vuln = data.vulnerability || {};
 
     const reconAssets = data.recon?.assets || {};
-    const totalSubdomains = recon.subdomains || (reconAssets.subdomains ? reconAssets.subdomains.length : 0);
+    const rawSubs = recon.subdomains || reconAssets.subdomains || [];
+    const totalSubdomains = typeof rawSubs === 'number' ? rawSubs : (typeof rawSubs === 'string' ? rawSubs.split(',').filter(s => s.trim()).length : rawSubs.length);
     const totalIPs = recon.ips || (reconAssets.ips ? reconAssets.ips.length : 0);
     
     // Update metric cards 2 & 3
